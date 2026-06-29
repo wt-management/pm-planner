@@ -37,7 +37,7 @@ a{color:inherit;text-decoration:none}
 
 /* 레이아웃 */
 #app{display:none;min-height:100vh}
-#sidebar{position:fixed;top:0;left:0;bottom:0;width:236px;background:linear-gradient(180deg,#211d52,#1a1840);color:#c7d2fe;display:flex;flex-direction:column;z-index:20}
+#sidebar{position:fixed;top:0;left:0;bottom:0;width:236px;background:#0f172a;color:#94a3b8;display:flex;flex-direction:column;z-index:20}
 .brand{padding:20px 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)}
 .brand .bi-logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#6366f1,#a855f7);display:flex;align-items:center;justify-content:center;font-size:17px}
 .brand b{color:#fff;font-size:15px;font-weight:700}
@@ -46,24 +46,24 @@ a{color:inherit;text-decoration:none}
 .nav .lbl-grp{font-size:10.5px;font-weight:700;color:#7c7fc4;letter-spacing:.08em;padding:6px 12px 8px;text-transform:uppercase}
 .nav a{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:10px;color:#c0c7ef;font-weight:500;margin-bottom:2px;transition:.12s;cursor:pointer}
 .nav a:hover{background:rgba(255,255,255,.06);color:#fff}
-.nav a.active{background:linear-gradient(135deg,#4f46e5,#6d5ae8);color:#fff;box-shadow:0 6px 16px rgba(79,70,229,.4)}
+.nav a.active{background:rgba(255,255,255,.1);color:#fff;font-weight:600}
 .nav .ico{font-size:16px;width:20px;text-align:center}
 .switch-wrap{padding:6px 12px 4px;position:relative}
-.switch-btn{width:100%;background:rgba(255,255,255,.05);border:1px solid #3730a3;border-radius:9px;padding:9px 11px;color:#c7d2fe;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:7px}
+.switch-btn{width:100%;background:rgba(255,255,255,.05);border:1px solid #334155;border-radius:9px;padding:9px 11px;color:#94a3b8;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:7px}
 .switch-btn:hover{background:rgba(255,255,255,.1)}
-.switch-dd{display:none;position:absolute;bottom:106%;left:12px;right:12px;background:#2a2566;border:1px solid #4338ca;border-radius:12px;overflow:hidden;box-shadow:0 -10px 30px rgba(0,0,0,.5);z-index:30;padding:6px}
+.switch-dd{display:none;position:absolute;bottom:106%;left:12px;right:12px;background:#1e293b;border:1px solid #334155;border-radius:12px;overflow:hidden;box-shadow:0 -10px 30px rgba(0,0,0,.5);z-index:30;padding:6px}
 .switch-dd.open{display:block}
-.sw-item{margin-top:2px;border-radius:7px;padding:8px 11px;display:flex;align-items:center;gap:8px;color:#c7d2fe;font-size:12px;cursor:pointer}
+.sw-item{margin-top:2px;border-radius:7px;padding:8px 11px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer}
 .sw-item:hover{background:rgba(255,255,255,.1)}
 .sw-item.cur{color:#fff;font-weight:700;background:rgba(139,92,246,.28)}
 .sw-badge{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;color:#fff;border-radius:5px;font-size:10px;font-weight:700;padding:0 5px;flex-shrink:0}
-.acct{margin:8px 12px 4px;background:rgba(255,255,255,.05);border:1px solid #3730a3;border-radius:11px;padding:10px 11px}
+.acct{margin:8px 12px 4px;background:#1e293b;border:1px solid #334155;border-radius:11px;padding:10px 11px}
 .acct .row{display:flex;align-items:center;gap:9px;margin-bottom:9px}
-.acct .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;font-size:13px}
-.acct .nm{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.acct .em{font-size:10px;color:#8b8fd6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acct .av{width:30px;height:30px;border-radius:50%;background:#ff4500;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;font-size:13px}
+.acct .nm{font-size:12px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acct .em{font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .acct .btns{display:flex;gap:5px}
-.acct .btns button{flex:1;background:rgba(255,255,255,.06);border:1px solid #3730a3;border-radius:7px;padding:6px 0;color:#c7d2fe;font-size:11px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.acct .btns button{flex:1;background:rgba(255,255,255,.06);border:1px solid #334155;border-radius:7px;padding:6px 0;color:#94a3b8;font-size:11px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px}
 .acct .btns button:hover{background:rgba(255,255,255,.12);color:#fff}
 #main{margin-left:236px;min-height:100vh}
 .topbar{position:sticky;top:0;z-index:15;background:rgba(246,247,249,.85);backdrop-filter:blur(8px);padding:20px 30px 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
