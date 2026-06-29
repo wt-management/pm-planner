@@ -339,9 +339,9 @@ function activityFor(entity){return state.activity.filter(a=>a.entity===entity).
 
 // ─── 부트 / 로그인 ───
 function show(id,d){document.getElementById(id).style.display=d;}
-async function boot(){const{data}=await _sb.auth.getSession();if(data&&data.session)await enterApp(data.session.user);}
+async function boot(){const{data}=await _sb.auth.getSession();if(data&&data.session)await enterApp(data.session.user);else location.href='https://wt-management.github.io/wontech/';}
 async function doLogin(){const email=(document.getElementById('login-id').value||'').trim();const pw=(document.getElementById('login-pw').value||'').trim();const err=document.getElementById('login-err');err.style.display='none';const{data,error}=await _sb.auth.signInWithPassword({email,password:pw});if(error){err.style.display='block';return;}await enterApp(data.user);}
-async function doLogout(){await _sb.auth.signOut();Object.keys(localStorage).filter(k=>k.startsWith('sb-')).forEach(k=>localStorage.removeItem(k));location.reload();}
+async function doLogout(){await _sb.auth.signOut();Object.keys(localStorage).filter(k=>k.startsWith('sb-')).forEach(k=>localStorage.removeItem(k));location.href='https://wt-management.github.io/wontech/';}
 async function enterApp(user){
   ME=user.email||'';document.getElementById('uname').textContent=ME;document.getElementById('uname-nm').textContent=nm(ME)||'사용자';document.getElementById('uavatar').textContent=(ME[0]||'P').toUpperCase();
   const probe=await _sb.from('pm_projects').select('id').limit(1);
