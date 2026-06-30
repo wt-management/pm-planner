@@ -246,6 +246,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 </head>
 <body>
 
+<div id="boot-ov" style="position:fixed;inset:0;background:#0f172a;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;z-index:200"><i class="bi bi-arrow-repeat" style="margin-right:8px"></i>불러오는 중…</div>
+
 <div id="login">
   <div class="login-card">
     <div class="lg">📋</div>
@@ -349,7 +351,7 @@ function activityFor(entity){return state.activity.filter(a=>a.entity===entity).
 
 // ─── 부트 / 로그인 ───
 function show(id,d){document.getElementById(id).style.display=d;}
-async function boot(){const{data}=await _sb.auth.getSession();if(data&&data.session)await enterApp(data.session.user);else location.href='https://wt-management.github.io/wontech/';}
+async function boot(){const{data}=await _sb.auth.getSession();if(data&&data.session)await enterApp(data.session.user);else if(location.hostname==='localhost'||location.hostname==='127.0.0.1'){var _bo=document.getElementById('boot-ov');if(_bo)_bo.textContent='로컬 개발 모드 (세션 없음)';}else location.href='https://wt-management.github.io/wontech/';}
 async function doLogin(){const email=(document.getElementById('login-id').value||'').trim();const pw=(document.getElementById('login-pw').value||'').trim();const err=document.getElementById('login-err');err.style.display='none';const{data,error}=await _sb.auth.signInWithPassword({email,password:pw});if(error){err.style.display='block';return;}await enterApp(data.user);}
 async function doLogout(){await _sb.auth.signOut();Object.keys(localStorage).filter(k=>k.startsWith('sb-')).forEach(k=>localStorage.removeItem(k));location.href='https://wt-management.github.io/wontech/';}
 async function enterApp(user){
@@ -358,7 +360,7 @@ async function enterApp(user){
   DEMO=!!(probe&&probe.error);
   if(DEMO){document.getElementById('demo-banner').classList.remove('hidden');seedDemo();}
   await loadAll();
-  show('login','none');document.getElementById('app').style.display='block';
+  show('login','none');var _bo=document.getElementById('boot-ov');if(_bo)_bo.style.display='none';document.getElementById('app').style.display='block';
   var _nav=(performance.getEntriesByType('navigation')[0]||{}).type;
   var _sv=sessionStorage.getItem('pmp_view'), _valid=['dashboard','roadmap','pipeline','tasks','ideas','okr'];
   if(_nav==='reload' && _sv && _valid.indexOf(_sv)>=0) curView=_sv;   // 새로고침=머문 뷰, 신규=대시보드
