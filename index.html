@@ -298,7 +298,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
     </div>
   </aside>
   <main id="main">
-    <div id="demo-banner" class="demo-banner hidden"><i class="bi bi-info-circle"></i> <b>둘러보기 모드</b> — 예시 데이터로 표시 중이며, 입력 내용은 이 브라우저에만 임시 저장됩니다. 팀 공용 저장(여러 명이 함께 보기)을 켜려면 DB 설정을 1회 적용해야 합니다. <button onclick="this.parentNode.classList.add('hidden')" style="margin-left:auto;background:transparent;border:0;color:#92400e;cursor:pointer;font-size:17px;line-height:1">×</button></div>
+    <div id="demo-banner" class="demo-banner hidden"><i class="bi bi-info-circle"></i> <b>둘러보기 모드</b> — 예시 데이터로 표시 중이며, 입력 내용은 이 브라우저에만 임시 저장됩니다. 팀 공용 저장(여러 명이 함께 보기)을 켜려면 DB 설정을 1회 적용해야 합니다. <button onclick="resetDemo()" style="margin-left:auto;background:#fde68a;border:0;color:#92400e;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;font-weight:700">🔄 샘플 새로고침</button> <button onclick="this.parentNode.classList.add('hidden')" style="background:transparent;border:0;color:#92400e;cursor:pointer;font-size:17px;line-height:1">×</button></div>
     <div id="view"></div>
   </main>
 </div>
@@ -335,6 +335,8 @@ const GATE_TEMPLATES={
 };
 
 let DEMO=false,ME='';
+const SEED_VER='v3';
+function resetDemo(){['pm_projects','pm_tasks','pm_ideas','pm_okrs','pm_activity'].forEach(t=>{try{localStorage.removeItem('pmp_'+t)}catch(e){}});try{localStorage.removeItem('pmp_seedver')}catch(e){}location.reload();}
 const state={projects:[],tasks:[],ideas:[],okrs:[],activity:[]};
 let curView='dashboard';
 
@@ -402,7 +404,9 @@ async function enterApp(user){
 
 function buildChecklist(doneMap){const c={};STAGE_K.forEach(k=>{c[k]=GATE_TEMPLATES[k].map((item,i)=>({item,done:!!(doneMap&&doneMap[k]&&i<doneMap[k])}));});return c;}
 function seedDemo(){
-  if(lsGet('pm_projects').length)return;
+  if(localStorage.getItem('pmp_seedver')===SEED_VER && lsGet('pm_projects').length) return;
+  ['pm_projects','pm_tasks','pm_ideas','pm_okrs','pm_activity'].forEach(t=>localStorage.removeItem(lsKey(t)));
+  localStorage.setItem('pmp_seedver',SEED_VER);
   const ago=d=>new Date(Date.now()-d*86400000).toISOString();
   const P=[
     {name:'올리지오 차세대 핸드피스',category:'장비',stage:'validation',pm:'김기획',target_launch:'2026-10-31',progress:55,priority:'high',health:'amber',summary:'쿨링모듈 부품 입고 지연으로 V&V 일정 압박. 2차 벤더 소싱 중.',next_gate:'2026-08-05',budget:1200000000,cl:{opportunity:5,concept:6,validation:3},ms:[{name:'설계검증 완료',date:'2026-08-20',done:false},{name:'임상 착수',date:'2026-09-10',done:false}],rk:[{desc:'쿨링모듈 단일 공급사 의존',severity:'high',mitigation:'2차 벤더 소싱 진행',status:'open'}],lk:[{label:'제품기획서',url:'https://example.com'},{label:'설계검증 보고서',url:'https://example.com'}]},
@@ -1159,7 +1163,7 @@ document.getElementById('login-btn').addEventListener('click',doLogin);
 document.getElementById('login-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('logout-btn').addEventListener('click',doLogout);
 document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>setView(a.dataset.v)));
-Object.assign(window,{render,setView,setRmTab,setPipe,pipeJump,dashHealth,setTaskFilter,setTaskAssignee,addDep,removeDep,editCap,saveCurView,applyView,delView,taskPatch,setIdeaTab,toggleSwitch,goSite,openItem,openByEntity,closeDrawer,setDrawerTab,patchObj,renderDrawer,postComment,toggleGate,addMs,toggleMs,delMs,addRisk,toggleRisk,delRisk,addLink,delLink,checkinKr,openProjModal,saveProj,delProj,openTaskModal,saveTask,delTask,openIdeaModal,saveIdea,delIdea,voteIdea,promoteIdea,calcRice,openOkrModal,saveOkr,delOkr,addKr,closeModal,openChangePwModal,doChangePw,forgotPw});
+Object.assign(window,{resetDemo,render,setView,setRmTab,setPipe,pipeJump,dashHealth,setTaskFilter,setTaskAssignee,addDep,removeDep,editCap,saveCurView,applyView,delView,taskPatch,setIdeaTab,toggleSwitch,goSite,openItem,openByEntity,closeDrawer,setDrawerTab,patchObj,renderDrawer,postComment,toggleGate,addMs,toggleMs,delMs,addRisk,toggleRisk,delRisk,addLink,delLink,checkinKr,openProjModal,saveProj,delProj,openTaskModal,saveTask,delTask,openIdeaModal,saveIdea,delIdea,voteIdea,promoteIdea,calcRice,openOkrModal,saveOkr,delOkr,addKr,closeModal,openChangePwModal,doChangePw,forgotPw});
 boot();
 </script>
 <script>function printPDF(){var t=document.title;var r=function(){document.title=t;window.removeEventListener('afterprint',r);};window.addEventListener('afterprint',r);window.print();}</script>
