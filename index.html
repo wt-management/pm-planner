@@ -418,7 +418,7 @@ function seedDemo(){
   const projs=P.map(p=>({id:uid(),name:p.name,category:p.category,stage:p.stage,pm:p.pm,target_launch:p.target_launch,progress:p.progress,priority:p.priority,health:p.health,summary:p.summary,next_gate:p.next_gate,budget:p.budget,checklist:buildChecklist(p.cl),milestones:p.ms,risks:p.rk,links:p.lk,status:'active',created_at:ago(40)}));
   lsSet('pm_projects',projs);
   const id=i=>projs[i].id;
-  lsSet('pm_tasks',[
+  const TK=[
     // 김기획 — 활발(완료 다수 + 진행)
     {id:uid(),project_id:id(0),title:'임상 프로토콜 확정',status:'done',assignee:'김기획',priority:'high',points:5,due_date:'2026-06-20',created_at:ago(30),completed_at:ago(25)},
     {id:uid(),project_id:id(0),title:'게이트 산출물 정리',status:'done',assignee:'김기획',priority:'medium',points:3,created_at:ago(16),completed_at:ago(12)},
@@ -454,7 +454,7 @@ function seedDemo(){
     {id:uid(),project_id:id(3),title:'인증 사전검토',status:'done',assignee:'RA팀',priority:'medium',points:3,created_at:ago(24),completed_at:ago(20)},
     {id:uid(),project_id:id(3),title:'양산 라인 셋업',status:'todo',assignee:'생산팀',priority:'medium',points:5,due_date:'2026-08-01',created_at:ago(7)},
     {id:uid(),project_id:id(0),title:'2차 벤더 평가',status:'todo',assignee:'구매팀',priority:'medium',points:3,due_date:'2026-07-20',created_at:ago(5)},
-  ]);
+  ]; (function(){const f=t=>TK.find(x=>x.title===t);const L=(a,b)=>{const A=f(a),B=f(b);if(A&&B)A.deps=(A.deps||[]).concat([B.id]);};L('양산 라인 셋업','식약처 인증 서류 제출');L('출시 준비 체크리스트','인증 사전검토');L('니들 깊이 자동제어 스펙','컨셉 정의');})(); lsSet('pm_tasks',TK);
   lsSet('pm_ideas',[
     {id:uid(),title:'AI 시술 가이드 앱 연동',description:'시술 파라미터 자동 추천으로 신규 의사 학습곡선 단축',reach:300,impact:2,confidence:70,effort:4,votes:5,status:'reviewing',author:'김기획',created_at:ago(20)},
     {id:uid(),title:'소모품 자동 재주문 알림',description:'병원별 사용량 기반 재고 소진 예측 → 자동 알림',reach:500,impact:1,confidence:90,effort:1,votes:8,status:'new',author:'이상품',created_at:ago(15)},
@@ -548,6 +548,36 @@ function projHealthScore(p){
 function scoreCol(s){return s>=75?'#16a34a':s>=50?'#f59e0b':'#dc2626';}
 function setTaskAssignee(n){taskAssignee=n;curView='tasks';render();window.scrollTo(0,0);}
 
+// ─── 의존성·용량·멘션·저장뷰·번업 ───
+function taskById(id){return state.tasks.find(t=>t.id===id);}
+function taskDeps(t){return(t.deps||[]).map(taskById).filter(Boolean);}
+function taskDependents(t){return state.tasks.filter(x=>(x.deps||[]).includes(t.id));}
+function taskBlocked(t){return taskOpen(t)&&taskDeps(t).some(d=>!taskDone(d));}
+async function taskPatch(id,patch){const t=taskById(id);if(!t)return;Object.assign(t,patch);await storeUpdate('pm_tasks',id,patch);renderDrawer();render();}
+async function addDep(id){const sel=document.getElementById('dep-sel');const dep=sel&&sel.value;if(!dep)return;const t=taskById(id);await taskPatch(id,{deps:(t.deps||[]).concat([dep])});}
+async function removeDep(id,dep){const t=taskById(id);await taskPatch(id,{deps:(t.deps||[]).filter(x=>x!==dep)});}
+const CAP_KEY='pmp_capacity';
+function capMap(){try{return JSON.parse(localStorage.getItem(CAP_KEY)||'{}');}catch(e){return{};}}
+function getCap(n){const m=capMap();return m[n]!=null?m[n]:20;}
+function setCap(n,v){const m=capMap();m[n]=Number(v)||0;localStorage.setItem(CAP_KEY,JSON.stringify(m));render();}
+function editCap(n){const v=prompt(n+' 주간 용량(포인트):',getCap(n));if(v!==null)setCap(n,v);}
+function mentionHtml(s){return esc(s).replace(/@([\w가-힣]+)/g,'<b style="color:var(--brand)">@$1</b>');}
+const VIEW_KEY='pmp_views';
+function savedViews(){try{return JSON.parse(localStorage.getItem(VIEW_KEY)||'[]');}catch(e){return[];}}
+function saveCurView(kind){const name=prompt('이 필터를 저장할 이름:');if(!name)return;const v=savedViews();v.push(kind==='pipe'?{kind,name,pm:pipePM,cat:pipeCat,health:pipeHealth,q:pipeQ}:{kind,name,proj:taskFilter,asg:taskAssignee});localStorage.setItem(VIEW_KEY,JSON.stringify(v));toast('뷰 저장됨');render();}
+function applyView(i){const v=savedViews()[i];if(!v)return;if(v.kind==='pipe'){pipePM=v.pm||'';pipeCat=v.cat||'';pipeHealth=v.health||'';pipeQ=v.q||'';curView='pipeline';}else{taskFilter=v.proj||'';taskAssignee=v.asg||'';curView='tasks';}render();}
+function delView(i){const v=savedViews();v.splice(i,1);localStorage.setItem(VIEW_KEY,JSON.stringify(v));render();}
+function viewChips(kind){const vs=savedViews().map((v,i)=>({v,i})).filter(x=>x.v.kind===kind);return vs.map(x=>`<span class="chip chip-gray" style="cursor:pointer;padding:4px 10px" onclick="applyView(${x.i})">🔖 ${esc(x.v.name)}<span onclick="event.stopPropagation();delView(${x.i})" style="color:var(--muted);margin-left:5px">×</span></span>`).join('');}
+function suggestHealth(p){const s=projHealthScore(p);return s>=75?'green':s>=50?'amber':'red';}
+function burnupSvg(){
+  const wks=lastWeeks(8);let cumC=0,cumD=0;const cre=[],don=[];
+  wks.forEach(w=>{cumC+=state.tasks.filter(t=>t.created_at&&weekKey(t.created_at)===w.key).length;cumD+=state.tasks.filter(t=>taskDone(t)&&t.completed_at&&weekKey(t.completed_at)===w.key).length;cre.push(cumC);don.push(cumD);});
+  const max=Math.max(1,...cre),W=560,H=170,pad=26;
+  const x=i=>pad+i*(W-2*pad)/(wks.length-1),y=v=>H-pad-(v/max)*(H-2*pad);
+  const line=arr=>arr.map((v,i)=>`${i?'L':'M'}${x(i).toFixed(0)},${y(v).toFixed(0)}`).join(' ');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px"><path d="${line(cre)}" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 3"/><path d="${line(don)}" fill="none" stroke="#16a34a" stroke-width="2.5"/>${don.map((v,i)=>`<circle cx="${x(i).toFixed(0)}" cy="${y(v).toFixed(0)}" r="3" fill="#16a34a"/>`).join('')}${wks.map((w,i)=>`<text x="${x(i).toFixed(0)}" y="${H-7}" font-size="9" fill="#94a3b8" text-anchor="middle">${w.label}</text>`).join('')}</svg><div class="muted" style="font-size:11.5px">점선=누적 생성(범위) · 초록=누적 완료. 간격이 벌어지면 백로그 확대 신호</div>`;
+}
+
 // ─── 팀 워크로드 ───
 function viewTeam(){
   const ppl=peopleAgg().sort((a,b)=>b.acts-a.acts);
@@ -563,13 +593,14 @@ function viewTeam(){
       <td style="color:var(--ok);font-weight:700">${x.doneWeek||'-'}</td>
       <td>${x.pmProjects||'-'}${x.pmRisk?` <span style="color:var(--bad)">(위험 ${x.pmRisk})</span>`:''}</td>
       <td style="width:160px"><div style="display:flex;align-items:center;gap:8px"><div class="miniprog" style="min-width:60px;flex:1"><i style="width:${x.open/maxOpen*100}%;background:${LOAD_C[lv]}"></i></div><span class="chip" style="background:${LOAD_C[lv]}22;color:${LOAD_C[lv]}">${LOAD_N[lv]}</span></div></td>
-      <td class="muted" style="font-size:12px">${x.last?timeAgo(x.last):'기록 없음'}</td></tr>`;}).join('')||'<tr><td colspan="7" class="empty">담당자 데이터 없음</td></tr>';
+      <td style="width:130px">${(()=>{const cap=getCap(x.name),u=cap?Math.round(x.points/cap*100):0;return `<div style="display:flex;align-items:center;gap:6px"><div class="miniprog" style="min-width:44px;flex:1"><i style="width:${Math.min(100,u)}%;background:${u>100?'#dc2626':u>=80?'#f59e0b':'#16a34a'}"></i></div><span class="muted" style="font-size:11px;white-space:nowrap;cursor:pointer" onclick="event.stopPropagation();editCap('${esc(x.name)}')" title="클릭해 용량 수정">${x.points}/${cap}${u>100?' ⚠':''}</span></div>`;})()}</td>
+      <td class="muted" style="font-size:12px">${x.last?timeAgo(x.last):'기록 없음'}</td></tr>`;}).join('')||'<tr><td colspan="8" class="empty">담당자 데이터 없음</td></tr>';
   const unlist=unassigned.length?unassigned.slice(0,10).map(t=>`<div onclick="openItem('task','${t.id}')" style="padding:8px 0;border-bottom:1px dashed var(--line);cursor:pointer;font-size:13px"><b style="color:var(--ink)">${esc(t.title)}</b>${taskOverdue(t)?' <span style="color:var(--bad)">· 지연</span>':''}</div>`).join(''):'<div class="empty" style="color:var(--ok)">미배정 업무 없음</div>';
   const idlelist=idle.length?idle.map(x=>`<div style="padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px;display:flex;justify-content:space-between"><b style="color:var(--ink)">${esc(x.name)}</b><span class="muted">최근 활동 ${timeAgo(x.last)} · 진행중 ${x.open}건</span></div>`).join(''):'<div class="empty" style="color:var(--ok)"><i class="bi bi-check-circle"></i> 최근 7일 내 전원 활동</div>';
   return page('👥 팀 워크로드','누가 무엇을 얼마나 · 부하·활동 한눈에 (행 클릭 → 그 담당자 업무)')+`
     <div class="grid kpis" style="margin-bottom:18px">${kpis.map(k=>`<div class="kpi"><div class="v" style="color:${k.c||'var(--ink)'}">${k.v}</div><div class="l">${k.l}</div></div>`).join('')}</div>
     <div class="card" style="padding:0;overflow:auto;margin-bottom:16px"><div class="sect-title" style="padding:18px 20px 4px"><span>👥 담당자별 현황 <span class="muted" style="font-size:12px;font-weight:500">활동 많은 순</span></span></div>
-      <table class="tbl"><thead><tr><th class="l">담당자</th><th>진행중</th><th>지연</th><th>이번주 완료</th><th>담당 PM</th><th>부하</th><th>최근 활동</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <table class="tbl"><thead><tr><th class="l">담당자</th><th>진행중</th><th>지연</th><th>이번주 완료</th><th>담당 PM</th><th>부하</th><th>용량(P)</th><th>최근 활동</th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="grid" style="grid-template-columns:1fr 1fr">
       <div class="card"><div class="sect-title"><span>📥 미배정 업무</span></div>${unlist}</div>
       <div class="card"><div class="sect-title"><span>😴 저조·무활동 (7일+ 미활동)</span></div>${idlelist}</div></div></div>`;
@@ -584,7 +615,7 @@ function viewInsights(){
   const cycle=doneCT.length?Math.round(doneCT.reduce((s,t)=>s+(new Date(t.completed_at)-new Date(t.created_at))/86400000,0)/doneCT.length):0;
   const openT=state.tasks.filter(taskOpen), overT=state.tasks.filter(taskOverdue);
   const doneAll=state.tasks.filter(taskDone).length, totalT=state.tasks.length;
-  const kpis=[{v:doneW[7]||0,l:'이번주 완료 (속도)',c:'var(--ok)'},{v:cycle+'일',l:'평균 사이클 타임'},{v:(totalT?Math.round(doneAll/totalT*100):0)+'%',l:'업무 완료율'},{v:overT.length,l:'지연 업무',c:overT.length?'var(--bad)':'var(--muted)'},{v:openT.filter(t=>t.blocker).length,l:'블로커',c:'var(--warn)'}];
+  const kpis=[{v:doneW[7]||0,l:'이번주 완료 (속도)',c:'var(--ok)'},{v:cycle+'일',l:'평균 사이클 타임'},{v:(totalT?Math.round(doneAll/totalT*100):0)+'%',l:'업무 완료율'},{v:overT.length,l:'지연 업무',c:overT.length?'var(--bad)':'var(--muted)'},{v:openT.filter(t=>t.blocker).length,l:'블로커',c:'var(--warn)'},{v:state.tasks.filter(taskBlocked).length,l:'의존성 대기',c:'var(--warn)'}];
   const maxW=Math.max(1,...doneW,...createW);
   const bars=(arr,col)=>wks.map((w,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;display:flex;align-items:flex-end;height:110px"><div style="width:80%;margin:0 auto;background:${col};border-radius:5px 5px 0 0;height:${arr[i]/maxW*100}%;min-height:${arr[i]?4:0}px" title="${w.label}: ${arr[i]}"></div></div><div style="font-size:11px;font-weight:700;color:var(--ink)">${arr[i]}</div><div class="muted" style="font-size:10px">${w.label}</div></div>`).join('');
   const ph=state.projects.filter(p=>p.status==='active').map(p=>({p,s:projHealthScore(p),stale:projStaleDays(p)})).sort((a,b)=>a.s-b.s);
@@ -596,6 +627,7 @@ function viewInsights(){
     <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
       <div class="card"><div class="sect-title"><span>⚡ 속도 (주별 완료 업무)</span></div><div style="display:flex;gap:6px;align-items:flex-end">${bars(doneW,'#16a34a')}</div></div>
       <div class="card"><div class="sect-title"><span>📊 주별 신규 생성</span></div><div style="display:flex;gap:6px;align-items:flex-end">${bars(createW,'#6366f1')}</div><div class="muted" style="font-size:11.5px;margin-top:8px">신규 생성이 완료(왼쪽)를 지속 상회하면 백로그 증가 신호</div></div></div>
+    <div class="card" style="margin-bottom:16px"><div class="sect-title"><span>📈 번업 차트 (누적 범위 vs 완료)</span></div>${burnupSvg()}</div>
     <div class="card" style="padding:0;overflow:auto;margin-bottom:16px"><div class="sect-title" style="padding:18px 20px 4px"><span>🩺 프로젝트 건강 랭킹 <span class="muted" style="font-size:12px;font-weight:500">낮은 점수 = 주의 필요</span></span></div>
       <table class="tbl"><thead><tr><th class="l">프로젝트</th><th>단계</th><th>건강점수</th><th>지연업무</th><th>정체</th><th>헬스</th></tr></thead><tbody>${phRows}</tbody></table></div>
     <div class="card"><div class="sect-title"><span>⏳ WIP 정체 (오래 진행 중인 업무)</span></div>${agingHtml}</div></div>`;
@@ -660,6 +692,20 @@ function viewDashboard(){
 
   return page('📊 경영 대시보드','포트폴리오 현황 · 게이트 리뷰 · 위험 관리 — 카드를 누르면 상세로 이동')+`
   <div class="grid kpis" style="margin-bottom:18px">${kpis.map(k=>`<div class="kpi" onclick="${k.go}"><div class="ic">${k.ic}</div><div class="v">${k.v}</div><div class="l">${k.l}</div>${k.tr?`<div class="tr">${k.tr}</div>`:''}</div>`).join('')}</div>
+  ${(()=>{const tw=thisWeekStats();const ppl=peopleAgg();const over=ppl.filter(x=>loadLevel(x.open)==='over').length;const idle=ppl.filter(x=>x.last&&ageDays(x.last)>=7).length;const bl=state.tasks.filter(taskBlocked).length;return `<div class="card" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+    <div class="sect-title" style="margin:0"><span>📅 이번주 스냅샷</span></div>
+    <div style="display:flex;gap:22px;flex-wrap:wrap;flex:1">
+      <div><span class="muted" style="font-size:12px">완료</span> <b style="color:var(--ok);font-size:18px">${tw.done}</b></div>
+      <div><span class="muted" style="font-size:12px">신규</span> <b style="font-size:18px;color:var(--ink)">${tw.created}</b></div>
+      <div><span class="muted" style="font-size:12px">지연</span> <b style="color:${tw.overdue?'var(--bad)':'var(--muted)'};font-size:18px">${tw.overdue}</b></div>
+      <div><span class="muted" style="font-size:12px">블로커</span> <b style="color:var(--warn);font-size:18px">${tw.blockers}</b></div>
+      <div><span class="muted" style="font-size:12px">의존성 대기</span> <b style="color:var(--warn);font-size:18px">${bl}</b></div>
+    </div>
+    <div style="display:flex;gap:8px;cursor:pointer" onclick="setView('team')">
+      <span class="chip ${over?'chip-red':'chip-gray'}">과부하 ${over}명</span>
+      <span class="chip ${idle?'chip-amber':'chip-gray'}">저조 ${idle}명</span>
+      <span class="chip chip-gray">팀 워크로드 →</span>
+    </div></div>`;})()}
   <div class="grid" style="grid-template-columns:1fr 1.35fr;margin-bottom:16px">
     <div class="card"><div class="sect-title"><span>🚦 포트폴리오 헬스</span></div>
       <div style="display:flex;align-items:center;gap:24px">${donut(segs,P.length)}
@@ -756,6 +802,7 @@ function viewPipeline(){
       <select onchange="setPipe('health',this.value)"><option value="">헬스 전체</option>${['green','amber','red'].map(h=>`<option value="${h}" ${pipeHealth===h?'selected':''}>${HEALTH[h].n}</option>`).join('')}</select>
       <input placeholder="🔍 검색" value="${esc(pipeQ)}" oninput="pipeQ=this.value" onkeydown="if(event.key==='Enter')render()">
       ${active?`<button class="btn btn-sm" onclick="pipePM='';pipeCat='';pipeQ='';pipeHealth='';render()">초기화</button>`:''}
+      <button class="btn btn-sm" onclick="saveCurView('pipe')">🔖 뷰 저장</button>${viewChips('pipe')}
       <span class="muted" style="margin-left:auto;font-size:12px">${P.length}개 표시</span></div>
     <div class="board">${cols}</div></div>`;
 }
@@ -785,13 +832,14 @@ function viewTasks(){
   const acts=`<select onchange="setTaskFilter(this.value)" style="padding:8px 11px;border:1px solid var(--line);border-radius:9px;box-shadow:var(--sh)">${opts}</select>`+
     `<select onchange="setTaskAssignee(this.value)" style="padding:8px 11px;border:1px solid var(--line);border-radius:9px;box-shadow:var(--sh)">${aopts}</select>`+
     `${(taskAssignee||taskFilter)?`<button class="btn btn-sm" onclick="taskAssignee='';taskFilter='';render()">초기화</button>`:''}`+
+    `<button class="btn btn-sm" onclick="saveCurView('task')">🔖 뷰 저장</button>`+
     `<button class="btn btn-primary" onclick="openTaskModal(null,'todo')">+ 새 업무</button>`;
-  return page('✅ 업무 보드','할 일을 끌어 상태 이동 · 카드를 누르면 상세'+(overdue?` · <span style="color:var(--bad)">기한 초과 ${overdue}건</span>`:'')+(taskAssignee?` · 담당 <b>${esc(taskAssignee)}</b>`:''),acts)+`<div class="board">${cols}</div></div>`;
+  return page('✅ 업무 보드','할 일을 끌어 상태 이동 · 카드를 누르면 상세'+(overdue?` · <span style="color:var(--bad)">기한 초과 ${overdue}건</span>`:'')+(taskAssignee?` · 담당 <b>${esc(taskAssignee)}</b>`:''),acts)+(viewChips('task')?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${viewChips('task')}</div>`:'')+`<div class="board">${cols}</div></div>`;
 }
 function taskCard(t){const p=state.projects.find(x=>x.id===t.project_id);const over=taskOverdue(t);
   return `<div class="kcard" draggable="true" data-id="${t.id}" data-kind="task" onclick="openItem('task','${t.id}')">
     <div class="kt"><i class="bi bi-grip-vertical grip"></i><span style="flex:1">${esc(t.title)}</span></div>
-    <div class="kmeta">${t.priority&&t.priority!=='medium'?`<span class="chip tag-priority-${t.priority}">${PRIORITY_N[t.priority]}</span>`:''}${p?`<span class="chip chip-gray">${esc(p.name)}</span>`:''}${t.assignee?`<span>👤 ${esc(t.assignee)}</span>`:''}${t.points?`<span class="chip chip-blue">${t.points}P</span>`:''}${t.due_date?`<span style="${over?'color:var(--bad);font-weight:700':''}">📅 ${fmtD(t.due_date)}</span>`:''}</div>
+    <div class="kmeta">${taskBlocked(t)?`<span class="chip chip-amber" title="선행 업무 미완료">🔗 대기</span>`:''}${t.priority&&t.priority!=='medium'?`<span class="chip tag-priority-${t.priority}">${PRIORITY_N[t.priority]}</span>`:''}${p?`<span class="chip chip-gray">${esc(p.name)}</span>`:''}${t.assignee?`<span>👤 ${esc(t.assignee)}</span>`:''}${t.points?`<span class="chip chip-blue">${t.points}P</span>`:''}${t.due_date?`<span style="${over?'color:var(--bad);font-weight:700':''}">📅 ${fmtD(t.due_date)}</span>`:''}</div>
     ${t.blocker?`<div class="blk">🚧 ${esc(t.blocker)}</div>`:''}</div>`;
 }
 
@@ -867,10 +915,10 @@ function drawerShell(kicker,title,metaHtml,tabs,body){
 }
 function activitySection(entity){
   const acts=activityFor(entity);
-  const items=acts.length?acts.map(a=>`<div class="tlitem ${a.kind==='comment'?'comment':''}"><div><span class="who">${esc(nm(a.who))}</span><span class="when">${timeAgo(a.created_at)}</span></div><div class="what">${a.kind==='comment'?esc(a.what):'<span class="muted">'+esc(a.what)+'</span>'}</div></div>`).join(''):'<div class="empty" style="padding:14px">기록 없음</div>';
+  const items=acts.length?acts.map(a=>`<div class="tlitem ${a.kind==='comment'?'comment':''}"><div><span class="who">${esc(nm(a.who))}</span><span class="when">${timeAgo(a.created_at)}</span></div><div class="what">${a.kind==='comment'?mentionHtml(a.what):'<span class="muted">'+esc(a.what)+'</span>'}</div></div>`).join(''):'<div class="empty" style="padding:14px">기록 없음</div>';
   return `<div class="dwcard"><div class="sect-title"><span>🕑 활동 · 코멘트</span></div>
     <div class="tl">${items}</div>
-    <div class="cmtbox"><input id="cmt-in" placeholder="코멘트 입력..." onkeydown="if(event.key==='Enter')postComment('${entity}')"><button class="btn btn-primary btn-sm" onclick="postComment('${entity}')">등록</button></div></div>`;
+    <div class="cmtbox"><input id="cmt-in" placeholder="코멘트 입력... (@이름 으로 멘션)" onkeydown="if(event.key==='Enter')postComment('${entity}')"><button class="btn btn-primary btn-sm" onclick="postComment('${entity}')">등록</button></div></div>`;
 }
 async function postComment(entity){const el=document.getElementById('cmt-in');const v=(el.value||'').trim();if(!v)return;await addComment(entity,v);renderDrawer();render();}
 
@@ -888,7 +936,7 @@ function renderProjectDrawer(p){
   const meta=`${stageChip(p.stage)}${healthChip(p.health)}${priChip(p.priority)}${p.pm?`<span class="muted" style="font-size:12px">👤 ${esc(p.pm)}</span>`:''}`;
   document.getElementById('drawer').innerHTML=drawerShell('제품 프로젝트',p.name,meta,tabs,body);
 }
-function dwProjOverview(p){const gp=gatePct(p);const ot=state.tasks.filter(t=>t.project_id===p.id);
+function dwProjOverview(p){const gp=gatePct(p);const ot=state.tasks.filter(t=>t.project_id===p.id);const done=ot.filter(taskDone).length,total=ot.length,open=ot.filter(taskOpen).length,overdue=ot.filter(taskOverdue).length,blk=ot.filter(x=>x.blocker&&taskOpen(x)).length,score=projHealthScore(p),sug=suggestHealth(p);
   return `<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
       <button class="btn btn-sm" onclick="openProjModal('${p.id}')"><i class="bi bi-pencil"></i> 정보 수정</button>
       <div style="margin-left:auto;display:flex;gap:6px;align-items:center"><span class="muted" style="font-size:12px">헬스</span>
@@ -902,6 +950,13 @@ function dwProjOverview(p){const gp=gatePct(p);const ot=state.tasks.filter(t=>t.
     </div></div>
     <div class="dwcard"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span class="muted">진척률</span><b style="color:var(--ink)">${p.progress||0}%</b></div><div class="miniprog" style="min-width:0;height:9px;margin-bottom:14px"><i style="width:${p.progress||0}%"></i></div>
       <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span class="muted">현재 단계 게이트 준비도</span><b style="color:var(--ink)">${gp}%</b></div><div class="miniprog" style="min-width:0;height:9px"><i style="width:${gp}%;background:var(--s-${p.stage})"></i></div></div>
+    <div class="dwcard"><div class="sect-title"><span>📊 업무 진행</span><span class="muted" style="font-size:12px">${done}/${total} 완료</span></div>
+      <div class="miniprog" style="min-width:0;height:9px;margin-bottom:9px"><i style="width:${total?Math.round(done/total*100):0}%;background:var(--ok)"></i></div>
+      <div style="display:flex;gap:16px;font-size:12.5px"><span class="muted">진행 <b style="color:var(--ink)">${open}</b></span><span style="${overdue?'color:var(--bad);font-weight:700':'color:var(--muted)'}">지연 ${overdue}</span><span class="muted">블로커 ${blk}</span></div></div>
+    <div class="dwcard" style="display:flex;align-items:center;gap:14px"><div style="text-align:center;min-width:56px"><div class="muted" style="font-size:11px">자동 건강점수</div><div style="font-size:22px;font-weight:800;color:${scoreCol(score)}">${score}</div></div>
+      <div style="flex:1;font-size:12.5px" class="muted">지연·블로커·정체·게이트 종합. 제안 헬스: <b style="color:${HEALTH[sug].c}">${HEALTH[sug].n}</b>${(p.health||'green')!==sug?` <button class="btn btn-sm" onclick="patchObj({health:'${sug}'},'자동제안 헬스 적용')">적용</button>`:' (현재와 동일)'}</div></div>
+    ${(p.milestones||[]).length?`<div class="dwcard"><div class="sect-title"><span>🎯 마일스톤</span><span class="muted" style="font-size:12px">${p.milestones.filter(m=>m.done).length}/${p.milestones.length}</span></div><div class="miniprog" style="min-width:0;height:8px"><i style="width:${p.milestones.length?Math.round(p.milestones.filter(m=>m.done).length/p.milestones.length*100):0}%"></i></div></div>`:''}
+    ${(p.risks||[]).filter(r=>r.status!=='closed').length?`<div class="dwcard"><div class="sect-title"><span>⚠ 미해결 리스크</span><span class="muted" style="font-size:12px">${p.risks.filter(r=>r.status!=='closed').length}건</span></div>${p.risks.filter(r=>r.status!=='closed').slice(0,3).map(r=>`<div style="font-size:12.5px;padding:4px 0;display:flex;gap:7px;align-items:center"><span class="chip chip-${r.severity==='high'?'red':r.severity==='med'?'amber':'gray'}">${SEV_N[r.severity]||r.severity}</span><span>${esc(r.desc)}</span></div>`).join('')}</div>`:''}
     ${activitySection('project:'+p.id)}`;
 }
 function kv(k,v){return `<div><div class="k">${k}</div><div class="v">${v}</div></div>`;}
@@ -965,8 +1020,15 @@ function renderTaskDrawer(t){const p=state.projects.find(x=>x.id===t.project_id)
     <div class="dwcard"><div class="kv">
       ${kv('프로젝트',p?`<span style="cursor:pointer;color:var(--brand)" onclick="openItem('project','${p.id}')">${esc(p.name)} ↗</span>`:'미지정')}
       ${kv('담당자',esc(t.assignee||'-'))}${kv('마감일',(fmtD(t.due_date)||'-')+(over?' <span style="color:var(--bad)">⚠ 초과</span>':''))}
-      ${kv('상태',`<span class="chip chip-${TASK_CHIP[t.status]}">${TASK_N[t.status]}</span>`)}</div>
+      ${kv('상태',`<span class="chip chip-${TASK_CHIP[t.status]}">${TASK_N[t.status]}</span>`)}${kv('우선순위',priChip(t.priority))}${kv('포인트(공수)',t.points?t.points+'P':'-')}</div>
       ${t.blocker?`<div style="margin-top:14px;background:#fef2f2;border-radius:10px;padding:10px;font-size:12.5px;color:var(--bad)">🚧 블로커: ${esc(t.blocker)}</div>`:''}</div>
+    <div class="dwcard"><div class="sect-title"><span>🔗 의존성</span></div>
+      ${taskBlocked(t)?'<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;font-size:12.5px;color:#b45309;margin-bottom:10px">⚠ 미완료 선행 업무로 대기 중</div>':''}
+      <div class="muted" style="font-size:11.5px;margin-bottom:4px">선행 업무 (완료돼야 시작 가능)</div>
+      ${taskDeps(t).map(d=>`<div class="listrow"><span class="chip chip-${TASK_CHIP[d.status]}">${TASK_N[d.status]}</span><div style="flex:1;cursor:pointer;color:var(--ink)" onclick="openItem('task','${d.id}')">${esc(d.title)}</div><button class="gx" onclick="removeDep('${t.id}','${d.id}')">×</button></div>`).join('')||'<div class="muted" style="font-size:12px;padding:4px 0">없음</div>'}
+      <div style="display:flex;gap:6px;margin-top:8px"><select id="dep-sel" style="flex:1;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:12.5px"><option value="">+ 선행 업무 선택…</option>${state.tasks.filter(x=>x.id!==t.id&&!(t.deps||[]).includes(x.id)).map(x=>`<option value="${x.id}">${esc(x.title)}</option>`).join('')}</select><button class="btn btn-sm btn-primary" onclick="addDep('${t.id}')">추가</button></div>
+      ${taskDependents(t).length?`<div class="muted" style="font-size:11.5px;margin:12px 0 4px">후행 업무 (이 업무를 기다림)</div>${taskDependents(t).map(d=>`<div class="listrow"><span class="chip chip-${TASK_CHIP[d.status]}">${TASK_N[d.status]}</span><div style="flex:1;cursor:pointer;color:var(--ink)" onclick="openItem('task','${d.id}')">${esc(d.title)}</div></div>`).join('')}`:''}
+    </div>
     ${activitySection('task:'+t.id)}`;
   document.getElementById('drawer').innerHTML=drawerShell('업무',t.title,`<span class="chip chip-${TASK_CHIP[t.status]}">${TASK_N[t.status]}</span>${p?`<span class="muted" style="font-size:12px">${esc(p.name)}</span>`:''}${t.due_date?`<span class="muted" style="font-size:12px">📅 ${fmtD(t.due_date)}</span>`:''}`,null,body);
 }
@@ -1097,7 +1159,7 @@ document.getElementById('login-btn').addEventListener('click',doLogin);
 document.getElementById('login-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('logout-btn').addEventListener('click',doLogout);
 document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>setView(a.dataset.v)));
-Object.assign(window,{render,setView,setRmTab,setPipe,pipeJump,dashHealth,setTaskFilter,setTaskAssignee,setIdeaTab,toggleSwitch,goSite,openItem,openByEntity,closeDrawer,setDrawerTab,patchObj,renderDrawer,postComment,toggleGate,addMs,toggleMs,delMs,addRisk,toggleRisk,delRisk,addLink,delLink,checkinKr,openProjModal,saveProj,delProj,openTaskModal,saveTask,delTask,openIdeaModal,saveIdea,delIdea,voteIdea,promoteIdea,calcRice,openOkrModal,saveOkr,delOkr,addKr,closeModal,openChangePwModal,doChangePw,forgotPw});
+Object.assign(window,{render,setView,setRmTab,setPipe,pipeJump,dashHealth,setTaskFilter,setTaskAssignee,addDep,removeDep,editCap,saveCurView,applyView,delView,taskPatch,setIdeaTab,toggleSwitch,goSite,openItem,openByEntity,closeDrawer,setDrawerTab,patchObj,renderDrawer,postComment,toggleGate,addMs,toggleMs,delMs,addRisk,toggleRisk,delRisk,addLink,delLink,checkinKr,openProjModal,saveProj,delProj,openTaskModal,saveTask,delTask,openIdeaModal,saveIdea,delIdea,voteIdea,promoteIdea,calcRice,openOkrModal,saveOkr,delOkr,addKr,closeModal,openChangePwModal,doChangePw,forgotPw});
 boot();
 </script>
 <script>function printPDF(){var t=document.title;var r=function(){document.title=t;window.removeEventListener('afterprint',r);};window.addEventListener('afterprint',r);window.print();}</script>
