@@ -276,6 +276,9 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
       <div class="lbl-grp">전략</div>
       <a data-v="ideas"><span class="ico">💡</span><span class="lbl">아이디어 보드</span></a>
       <a data-v="okr"><span class="ico">🎯</span><span class="lbl">OKR</span></a>
+      <div class="lbl-grp">분석</div>
+      <a data-v="team"><span class="ico">👥</span><span class="lbl">팀 워크로드</span></a>
+      <a data-v="insights"><span class="ico">📈</span><span class="lbl">딜리버리 인사이트</span></a>
     </nav>
     <div class="acct">
       <div class="row"><div class="av" id="uavatar">P</div><div style="flex:1;min-width:0"><div class="nm" id="uname-nm">-</div><div class="em" id="uname">-</div></div></div>
@@ -416,20 +419,41 @@ function seedDemo(){
   lsSet('pm_projects',projs);
   const id=i=>projs[i].id;
   lsSet('pm_tasks',[
-    {id:uid(),project_id:id(0),title:'임상 프로토콜 확정',status:'done',assignee:'김기획',due_date:'2026-06-20',created_at:ago(30)},
-    {id:uid(),project_id:id(0),title:'쿨링모듈 시제품 평가',status:'doing',assignee:'연구소',due_date:'2026-07-10',blocker:'부품 입고 지연',created_at:ago(12)},
-    {id:uid(),project_id:id(0),title:'원가 산정',status:'todo',assignee:'이상품',due_date:'2026-07-15',created_at:ago(8)},
-    {id:uid(),project_id:id(0),title:'2차 벤더 평가',status:'todo',assignee:'구매팀',due_date:'2026-07-20',created_at:ago(5)},
-    {id:uid(),project_id:id(1),title:'VOC 인터뷰 5건',status:'review',assignee:'박매니저',due_date:'2026-07-05',created_at:ago(10)},
-    {id:uid(),project_id:id(1),title:'경쟁사 팁 벤치마킹',status:'doing',assignee:'이상품',due_date:'2026-07-12',created_at:ago(6)},
-    {id:uid(),project_id:id(3),title:'식약처 인증 서류 제출',status:'doing',assignee:'RA팀',due_date:'2026-07-01',blocker:'시험성적서 대기',created_at:ago(14)},
-    {id:uid(),project_id:id(3),title:'양산 라인 셋업',status:'todo',assignee:'생산팀',due_date:'2026-08-01',created_at:ago(7)},
-    {id:uid(),project_id:id(4),title:'특허 회피 설계 검토',status:'doing',assignee:'정선임',due_date:'2026-07-18',created_at:ago(9)},
-    {id:uid(),project_id:id(5),title:'멀티파장 모듈 검증',status:'doing',assignee:'연구소',due_date:'2026-09-01',created_at:ago(11)},
-    {id:uid(),project_id:id(5),title:'규제 문서 1차',status:'todo',assignee:'RA팀',due_date:'2026-08-20',created_at:ago(4)},
-    {id:uid(),project_id:id(7),title:'시장 반응 모니터링',status:'doing',assignee:'박매니저',due_date:'2026-07-25',created_at:ago(3)},
-    {id:uid(),project_id:id(8),title:'SaMD 규제 컨설팅 미팅',status:'todo',assignee:'정선임',due_date:'2026-07-22',created_at:ago(2)},
-    {id:uid(),project_id:id(2),title:'시장규모(TAM) 추정',status:'review',assignee:'박매니저',due_date:'2026-07-08',created_at:ago(6)},
+    // 김기획 — 활발(완료 다수 + 진행)
+    {id:uid(),project_id:id(0),title:'임상 프로토콜 확정',status:'done',assignee:'김기획',priority:'high',points:5,due_date:'2026-06-20',created_at:ago(30),completed_at:ago(25)},
+    {id:uid(),project_id:id(0),title:'게이트 산출물 정리',status:'done',assignee:'김기획',priority:'medium',points:3,created_at:ago(16),completed_at:ago(12)},
+    {id:uid(),project_id:id(0),title:'원가 1차 산정',status:'done',assignee:'김기획',priority:'medium',points:3,created_at:ago(9),completed_at:ago(5)},
+    {id:uid(),project_id:id(3),title:'경쟁사 인증 동향 분석',status:'done',assignee:'김기획',priority:'low',points:2,created_at:ago(6),completed_at:ago(2)},
+    {id:uid(),project_id:id(0),title:'초기 시장조사',status:'done',assignee:'김기획',priority:'medium',points:4,created_at:ago(40),completed_at:ago(33)},
+    {id:uid(),project_id:id(0),title:'쿨링모듈 설계 검토',status:'doing',assignee:'김기획',priority:'high',points:5,due_date:'2026-07-12',created_at:ago(7)},
+    {id:uid(),project_id:id(3),title:'출시 준비 체크리스트',status:'todo',assignee:'김기획',priority:'medium',points:3,due_date:'2026-07-18',created_at:ago(3)},
+    // 정선임 — 과부하(진행 7건)
+    {id:uid(),project_id:id(4),title:'특허 회피 설계 검토',status:'doing',assignee:'정선임',priority:'high',points:8,due_date:'2026-07-18',created_at:ago(9)},
+    {id:uid(),project_id:id(8),title:'SaMD 규제 컨설팅 미팅',status:'todo',assignee:'정선임',priority:'high',points:3,due_date:'2026-07-22',created_at:ago(2)},
+    {id:uid(),project_id:id(5),title:'규제 문서 1차',status:'todo',assignee:'정선임',priority:'medium',points:4,due_date:'2026-08-20',created_at:ago(4)},
+    {id:uid(),project_id:id(4),title:'니들 깊이 자동제어 스펙',status:'doing',assignee:'정선임',priority:'high',points:6,due_date:'2026-07-25',created_at:ago(8)},
+    {id:uid(),project_id:id(4),title:'시제품 사양 확정',status:'review',assignee:'정선임',priority:'medium',points:5,due_date:'2026-07-15',created_at:ago(11)},
+    {id:uid(),project_id:id(4),title:'경쟁사 특허 조사',status:'todo',assignee:'정선임',priority:'medium',points:3,due_date:'2026-07-30',created_at:ago(5)},
+    {id:uid(),project_id:id(5),title:'멀티파장 원가 검토',status:'todo',assignee:'정선임',priority:'low',points:2,due_date:'2026-08-05',created_at:ago(6)},
+    {id:uid(),project_id:id(4),title:'기술 타당성 검토',status:'done',assignee:'정선임',priority:'medium',points:4,created_at:ago(44),completed_at:ago(40)},
+    {id:uid(),project_id:id(4),title:'컨셉 정의',status:'done',assignee:'정선임',priority:'medium',points:3,created_at:ago(14),completed_at:ago(9)},
+    // 이상품 — 적정
+    {id:uid(),project_id:id(0),title:'원가 산정',status:'todo',assignee:'이상품',priority:'medium',points:3,due_date:'2026-07-15',created_at:ago(8)},
+    {id:uid(),project_id:id(1),title:'경쟁사 팁 벤치마킹',status:'doing',assignee:'이상품',priority:'medium',points:4,due_date:'2026-07-12',created_at:ago(6)},
+    {id:uid(),project_id:id(2),title:'TAM 시장규모 추정',status:'done',assignee:'이상품',priority:'medium',points:3,created_at:ago(10),completed_at:ago(6)},
+    {id:uid(),project_id:id(1),title:'컨셉 스케치',status:'done',assignee:'이상품',priority:'low',points:2,created_at:ago(32),completed_at:ago(28)},
+    // 박매니저 — 저조(최근 완료 없음, 오래된 진행)
+    {id:uid(),project_id:id(1),title:'VOC 인터뷰 5건',status:'review',assignee:'박매니저',priority:'high',points:5,due_date:'2026-07-05',created_at:ago(10)},
+    {id:uid(),project_id:id(7),title:'시장 반응 모니터링',status:'doing',assignee:'박매니저',priority:'low',points:2,due_date:'2026-07-25',created_at:ago(3)},
+    {id:uid(),project_id:id(2),title:'시장규모 검증',status:'review',assignee:'박매니저',priority:'medium',points:3,due_date:'2026-07-08',created_at:ago(6)},
+    // 지원 조직
+    {id:uid(),project_id:id(0),title:'쿨링모듈 시제품 평가',status:'doing',assignee:'연구소',priority:'high',points:6,due_date:'2026-07-10',blocker:'부품 입고 지연',created_at:ago(12)},
+    {id:uid(),project_id:id(5),title:'멀티파장 모듈 검증',status:'doing',assignee:'연구소',priority:'medium',points:5,due_date:'2026-09-01',created_at:ago(11)},
+    {id:uid(),project_id:id(0),title:'시제품 1차 평가',status:'done',assignee:'연구소',priority:'medium',points:4,created_at:ago(22),completed_at:ago(18)},
+    {id:uid(),project_id:id(3),title:'식약처 인증 서류 제출',status:'doing',assignee:'RA팀',priority:'high',points:5,due_date:'2026-07-01',blocker:'시험성적서 대기',created_at:ago(14)},
+    {id:uid(),project_id:id(3),title:'인증 사전검토',status:'done',assignee:'RA팀',priority:'medium',points:3,created_at:ago(24),completed_at:ago(20)},
+    {id:uid(),project_id:id(3),title:'양산 라인 셋업',status:'todo',assignee:'생산팀',priority:'medium',points:5,due_date:'2026-08-01',created_at:ago(7)},
+    {id:uid(),project_id:id(0),title:'2차 벤더 평가',status:'todo',assignee:'구매팀',priority:'medium',points:3,due_date:'2026-07-20',created_at:ago(5)},
   ]);
   lsSet('pm_ideas',[
     {id:uid(),title:'AI 시술 가이드 앱 연동',description:'시술 파라미터 자동 추천으로 신규 의사 학습곡선 단축',reach:300,impact:2,confidence:70,effort:4,votes:5,status:'reviewing',author:'김기획',created_at:ago(20)},
@@ -484,12 +508,105 @@ function stageChip(k){return `<span class="chip" style="background:${stageTint(k
 function stageTint(k){return{opportunity:'#f1f5f9',concept:'#e0f2fe',validation:'#ede9fe',launch_prep:'#fef3c7',launch:'#dcfce7'}[k];}
 function priChip(p){return `<span class="chip tag-priority-${p||'medium'}">${PRIORITY_N[p||'medium']}</span>`;}
 
+// ─── 분석 헬퍼 (워크로드·딜리버리) ───
+let taskAssignee='';
+const WEEKMS=7*86400000;
+function startOfWeek(d){const x=new Date(d);const day=(x.getDay()+6)%7;x.setHours(0,0,0,0);x.setDate(x.getDate()-day);return x;}
+function weekKey(d){return startOfWeek(d).toISOString().slice(0,10);}
+function lastWeeks(n){const s=startOfWeek(new Date());const out=[];for(let i=n-1;i>=0;i--){const d=new Date(s.getTime()-i*WEEKMS);out.push({key:d.toISOString().slice(0,10),label:(d.getMonth()+1)+'/'+d.getDate()});}return out;}
+function taskDone(t){return t.status==='done';}
+function taskOpen(t){return t.status!=='done';}
+function taskOverdue(t){return t.due_date&&t.status!=='done'&&fmtD(t.due_date)<today();}
+function ageDays(ts){if(!ts)return 0;return Math.floor((Date.now()-new Date(ts))/86400000);}
+function projLastAct(pid){let last=null;state.activity.forEach(a=>{if(a.entity==='project:'+pid&&(!last||a.created_at>last))last=a.created_at;});return last;}
+function projStaleDays(p){return ageDays(projLastAct(p.id)||p.updated_at||p.created_at);}
+function loadLevel(open){return open>=7?'over':open>=4?'busy':open>=1?'ok':'idle';}
+const LOAD_N={over:'과부하',busy:'바쁨',ok:'적정',idle:'여유'},LOAD_C={over:'#dc2626',busy:'#f59e0b',ok:'#16a34a',idle:'#94a3b8'};
+function peopleAgg(){
+  const map={},E=n=>{if(!n)return null;if(!map[n])map[n]={name:n,open:0,doing:0,overdue:0,doneWeek:0,doneTotal:0,points:0,pmProjects:0,pmRisk:0,acts:0,last:null,blockers:0};return map[n];};
+  const wkAgo=Date.now()-WEEKMS;
+  state.tasks.forEach(t=>{const m=E(t.assignee);if(!m)return;if(taskOpen(t)){m.open++;if(t.status==='doing')m.doing++;m.points+=Number(t.points||0);if(t.blocker)m.blockers++;}if(taskOverdue(t))m.overdue++;if(taskDone(t)){m.doneTotal++;if(t.completed_at&&new Date(t.completed_at).getTime()>=wkAgo)m.doneWeek++;}});
+  state.projects.forEach(p=>{if(p.status!=='active')return;const m=E(p.pm);if(!m)return;m.pmProjects++;if(p.health==='red')m.pmRisk++;});
+  state.activity.forEach(a=>{const m=E(nm(a.who));if(!m)return;m.acts++;if(!m.last||a.created_at>m.last)m.last=a.created_at;});
+  return Object.values(map);
+}
+function thisWeekStats(){
+  const wk=weekKey(new Date());
+  return {done:state.tasks.filter(t=>taskDone(t)&&t.completed_at&&weekKey(t.completed_at)===wk).length,
+    created:state.tasks.filter(t=>t.created_at&&weekKey(t.created_at)===wk).length,
+    overdue:state.tasks.filter(taskOverdue).length,
+    blockers:state.tasks.filter(t=>t.blocker&&taskOpen(t)).length};
+}
+function projHealthScore(p){
+  const tks=state.tasks.filter(t=>t.project_id===p.id);
+  const over=tks.filter(taskOverdue).length, blk=tks.filter(t=>t.blocker&&taskOpen(t)).length;
+  let s=100; s-=over*12; s-=blk*10; if(projStaleDays(p)>=10)s-=15; if(isOverdue(p))s-=20;
+  if(p.health==='red')s-=25; else if(p.health==='amber')s-=10;
+  s-=Math.max(0,60-gatePct(p))*0.2;
+  return Math.max(0,Math.min(100,Math.round(s)));
+}
+function scoreCol(s){return s>=75?'#16a34a':s>=50?'#f59e0b':'#dc2626';}
+function setTaskAssignee(n){taskAssignee=n;curView='tasks';render();window.scrollTo(0,0);}
+
+// ─── 팀 워크로드 ───
+function viewTeam(){
+  const ppl=peopleAgg().sort((a,b)=>b.acts-a.acts);
+  const over=ppl.filter(x=>loadLevel(x.open)==='over');
+  const idle=ppl.filter(x=>x.last&&ageDays(x.last)>=7);
+  const unassigned=state.tasks.filter(t=>taskOpen(t)&&!t.assignee);
+  const maxOpen=Math.max(1,...ppl.map(x=>x.open));
+  const kpis=[{v:ppl.length,l:'참여 인원'},{v:over.length,l:'과부하 인원',c:over.length?'var(--bad)':'var(--muted)'},{v:idle.length,l:'7일+ 저조',c:idle.length?'var(--warn)':'var(--muted)'},{v:unassigned.length,l:'미배정 업무',c:unassigned.length?'var(--warn)':'var(--muted)'}];
+  const rows=ppl.map(x=>{const lv=loadLevel(x.open);const inactive=x.last&&ageDays(x.last)>=7;
+    return `<tr onclick="setTaskAssignee('${esc(x.name)}')">
+      <td class="l"><b style="color:var(--ink)">${esc(x.name)}</b> ${inactive?'<span class="chip chip-amber" style="margin-left:4px">저조</span>':(x.acts>=8?'<span class="chip chip-green" style="margin-left:4px">활발</span>':'')}</td>
+      <td>${x.doing}/${x.open}</td><td style="${x.overdue?'color:var(--bad);font-weight:700':''}">${x.overdue||'-'}</td>
+      <td style="color:var(--ok);font-weight:700">${x.doneWeek||'-'}</td>
+      <td>${x.pmProjects||'-'}${x.pmRisk?` <span style="color:var(--bad)">(위험 ${x.pmRisk})</span>`:''}</td>
+      <td style="width:160px"><div style="display:flex;align-items:center;gap:8px"><div class="miniprog" style="min-width:60px;flex:1"><i style="width:${x.open/maxOpen*100}%;background:${LOAD_C[lv]}"></i></div><span class="chip" style="background:${LOAD_C[lv]}22;color:${LOAD_C[lv]}">${LOAD_N[lv]}</span></div></td>
+      <td class="muted" style="font-size:12px">${x.last?timeAgo(x.last):'기록 없음'}</td></tr>`;}).join('')||'<tr><td colspan="7" class="empty">담당자 데이터 없음</td></tr>';
+  const unlist=unassigned.length?unassigned.slice(0,10).map(t=>`<div onclick="openItem('task','${t.id}')" style="padding:8px 0;border-bottom:1px dashed var(--line);cursor:pointer;font-size:13px"><b style="color:var(--ink)">${esc(t.title)}</b>${taskOverdue(t)?' <span style="color:var(--bad)">· 지연</span>':''}</div>`).join(''):'<div class="empty" style="color:var(--ok)">미배정 업무 없음</div>';
+  const idlelist=idle.length?idle.map(x=>`<div style="padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px;display:flex;justify-content:space-between"><b style="color:var(--ink)">${esc(x.name)}</b><span class="muted">최근 활동 ${timeAgo(x.last)} · 진행중 ${x.open}건</span></div>`).join(''):'<div class="empty" style="color:var(--ok)"><i class="bi bi-check-circle"></i> 최근 7일 내 전원 활동</div>';
+  return page('👥 팀 워크로드','누가 무엇을 얼마나 · 부하·활동 한눈에 (행 클릭 → 그 담당자 업무)')+`
+    <div class="grid kpis" style="margin-bottom:18px">${kpis.map(k=>`<div class="kpi"><div class="v" style="color:${k.c||'var(--ink)'}">${k.v}</div><div class="l">${k.l}</div></div>`).join('')}</div>
+    <div class="card" style="padding:0;overflow:auto;margin-bottom:16px"><div class="sect-title" style="padding:18px 20px 4px"><span>👥 담당자별 현황 <span class="muted" style="font-size:12px;font-weight:500">활동 많은 순</span></span></div>
+      <table class="tbl"><thead><tr><th class="l">담당자</th><th>진행중</th><th>지연</th><th>이번주 완료</th><th>담당 PM</th><th>부하</th><th>최근 활동</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div class="card"><div class="sect-title"><span>📥 미배정 업무</span></div>${unlist}</div>
+      <div class="card"><div class="sect-title"><span>😴 저조·무활동 (7일+ 미활동)</span></div>${idlelist}</div></div></div>`;
+}
+
+// ─── 딜리버리 인사이트 ───
+function viewInsights(){
+  const wks=lastWeeks(8);
+  const doneW=wks.map(w=>state.tasks.filter(t=>taskDone(t)&&t.completed_at&&weekKey(t.completed_at)===w.key).length);
+  const createW=wks.map(w=>state.tasks.filter(t=>t.created_at&&weekKey(t.created_at)===w.key).length);
+  const doneCT=state.tasks.filter(t=>taskDone(t)&&t.completed_at&&t.created_at);
+  const cycle=doneCT.length?Math.round(doneCT.reduce((s,t)=>s+(new Date(t.completed_at)-new Date(t.created_at))/86400000,0)/doneCT.length):0;
+  const openT=state.tasks.filter(taskOpen), overT=state.tasks.filter(taskOverdue);
+  const doneAll=state.tasks.filter(taskDone).length, totalT=state.tasks.length;
+  const kpis=[{v:doneW[7]||0,l:'이번주 완료 (속도)',c:'var(--ok)'},{v:cycle+'일',l:'평균 사이클 타임'},{v:(totalT?Math.round(doneAll/totalT*100):0)+'%',l:'업무 완료율'},{v:overT.length,l:'지연 업무',c:overT.length?'var(--bad)':'var(--muted)'},{v:openT.filter(t=>t.blocker).length,l:'블로커',c:'var(--warn)'}];
+  const maxW=Math.max(1,...doneW,...createW);
+  const bars=(arr,col)=>wks.map((w,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;display:flex;align-items:flex-end;height:110px"><div style="width:80%;margin:0 auto;background:${col};border-radius:5px 5px 0 0;height:${arr[i]/maxW*100}%;min-height:${arr[i]?4:0}px" title="${w.label}: ${arr[i]}"></div></div><div style="font-size:11px;font-weight:700;color:var(--ink)">${arr[i]}</div><div class="muted" style="font-size:10px">${w.label}</div></div>`).join('');
+  const ph=state.projects.filter(p=>p.status==='active').map(p=>({p,s:projHealthScore(p),stale:projStaleDays(p)})).sort((a,b)=>a.s-b.s);
+  const phRows=ph.map(x=>`<tr onclick="openItem('project','${x.p.id}')"><td class="l"><b style="color:var(--ink)">${esc(x.p.name)}</b></td><td>${stageChip(x.p.stage)}</td><td><span class="chip" style="background:${scoreCol(x.s)}22;color:${scoreCol(x.s)}">${x.s}점</span></td><td>${state.tasks.filter(t=>t.project_id===x.p.id&&taskOverdue(t)).length||'-'}</td><td>${x.stale}일</td><td>${healthChip(x.p.health)}</td></tr>`).join('');
+  const aging=openT.filter(t=>t.status!=='todo').map(t=>({t,age:ageDays(t.created_at)})).sort((a,b)=>b.age-a.age).slice(0,8);
+  const agingHtml=aging.length?aging.map(x=>`<div onclick="openItem('task','${x.t.id}')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);cursor:pointer"><span class="chip chip-${x.age>=21?'red':x.age>=10?'amber':'gray'}">${x.age}일</span><div style="flex:1;font-size:13px"><b style="color:var(--ink)">${esc(x.t.title)}</b>${x.t.assignee?` <span class="muted">· ${esc(x.t.assignee)}</span>`:''}</div><span class="muted" style="font-size:11px">${TASK_N[x.t.status]}</span></div>`).join(''):'<div class="empty">정체 업무 없음</div>';
+  return page('📈 딜리버리 인사이트','속도·사이클타임·정체·프로젝트 건강 — 잘 돌아가는지 진단')+`
+    <div class="grid kpis" style="margin-bottom:18px">${kpis.map(k=>`<div class="kpi"><div class="v" style="color:${k.c||'var(--ink)'}">${k.v}</div><div class="l">${k.l}</div></div>`).join('')}</div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+      <div class="card"><div class="sect-title"><span>⚡ 속도 (주별 완료 업무)</span></div><div style="display:flex;gap:6px;align-items:flex-end">${bars(doneW,'#16a34a')}</div></div>
+      <div class="card"><div class="sect-title"><span>📊 주별 신규 생성</span></div><div style="display:flex;gap:6px;align-items:flex-end">${bars(createW,'#6366f1')}</div><div class="muted" style="font-size:11.5px;margin-top:8px">신규 생성이 완료(왼쪽)를 지속 상회하면 백로그 증가 신호</div></div></div>
+    <div class="card" style="padding:0;overflow:auto;margin-bottom:16px"><div class="sect-title" style="padding:18px 20px 4px"><span>🩺 프로젝트 건강 랭킹 <span class="muted" style="font-size:12px;font-weight:500">낮은 점수 = 주의 필요</span></span></div>
+      <table class="tbl"><thead><tr><th class="l">프로젝트</th><th>단계</th><th>건강점수</th><th>지연업무</th><th>정체</th><th>헬스</th></tr></thead><tbody>${phRows}</tbody></table></div>
+    <div class="card"><div class="sect-title"><span>⏳ WIP 정체 (오래 진행 중인 업무)</span></div>${agingHtml}</div></div>`;
+}
+
 // ─── 라우팅 ───
 function render(){
   try{ if(curView) sessionStorage.setItem('pmp_view', curView); }catch(e){}
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.v===curView));
   const v=document.getElementById('view');
-  const f={dashboard:viewDashboard,roadmap:viewRoadmap,pipeline:viewPipeline,tasks:viewTasks,ideas:viewIdeas,okr:viewOkr}[curView];
+  const f={dashboard:viewDashboard,roadmap:viewRoadmap,pipeline:viewPipeline,tasks:viewTasks,ideas:viewIdeas,okr:viewOkr,team:viewTeam,insights:viewInsights}[curView];
   v.innerHTML=f();bindDnD();
 }
 function setView(v){curView=v;render();window.scrollTo(0,0);}
@@ -656,19 +773,25 @@ let taskFilter='',taskGroup='status';
 function setTaskFilter(v){taskFilter=v;render();}
 function viewTasks(){
   const P=state.projects;
+  const asg=[...new Set(state.tasks.map(t=>t.assignee).filter(Boolean))].sort();
   const opts='<option value="">전체 프로젝트</option>'+P.map(p=>`<option value="${p.id}" ${taskFilter===p.id?'selected':''}>${esc(p.name)}</option>`).join('');
-  let T=state.tasks;if(taskFilter)T=T.filter(t=>t.project_id===taskFilter);
-  const overdue=T.filter(t=>t.due_date&&t.status!=='done'&&fmtD(t.due_date)<today()).length;
+  const aopts='<option value="">담당자 전체</option>'+asg.map(a=>`<option ${taskAssignee===a?'selected':''}>${esc(a)}</option>`).join('');
+  let T=state.tasks;if(taskFilter)T=T.filter(t=>t.project_id===taskFilter);if(taskAssignee)T=T.filter(t=>t.assignee===taskAssignee);
+  const overdue=T.filter(taskOverdue).length;
   const cols=TASK_COLS.map(c=>{const items=T.filter(t=>t.status===c.k);
     const cards=items.map(t=>taskCard(t)).join('')||'<div style="font-size:12px;color:#c7cdd6;text-align:center;padding:16px">비어있음</div>';
     return `<div class="col" data-tstatus="${c.k}"><div class="col-head"><div class="ld">${esc(c.n)}</div><span class="cnt">${items.length}</span></div>
       <div class="col-body" data-tstatus="${c.k}">${cards}</div><div class="add-row"><button onclick="openTaskModal(null,'${c.k}')">+ 업무</button></div></div>`;}).join('');
-  return page('✅ 업무 보드','할 일을 끌어 상태 이동 · 카드를 누르면 상세'+(overdue?` · <span style="color:var(--bad)">기한 초과 ${overdue}건</span>`:''),`<select onchange="setTaskFilter(this.value)" style="padding:8px 11px;border:1px solid var(--line);border-radius:9px;box-shadow:var(--sh)">${opts}</select><button class="btn btn-primary" onclick="openTaskModal(null,'todo')">+ 새 업무</button>`)+`<div class="board">${cols}</div></div>`;
+  const acts=`<select onchange="setTaskFilter(this.value)" style="padding:8px 11px;border:1px solid var(--line);border-radius:9px;box-shadow:var(--sh)">${opts}</select>`+
+    `<select onchange="setTaskAssignee(this.value)" style="padding:8px 11px;border:1px solid var(--line);border-radius:9px;box-shadow:var(--sh)">${aopts}</select>`+
+    `${(taskAssignee||taskFilter)?`<button class="btn btn-sm" onclick="taskAssignee='';taskFilter='';render()">초기화</button>`:''}`+
+    `<button class="btn btn-primary" onclick="openTaskModal(null,'todo')">+ 새 업무</button>`;
+  return page('✅ 업무 보드','할 일을 끌어 상태 이동 · 카드를 누르면 상세'+(overdue?` · <span style="color:var(--bad)">기한 초과 ${overdue}건</span>`:'')+(taskAssignee?` · 담당 <b>${esc(taskAssignee)}</b>`:''),acts)+`<div class="board">${cols}</div></div>`;
 }
-function taskCard(t){const p=state.projects.find(x=>x.id===t.project_id);const over=t.due_date&&t.status!=='done'&&fmtD(t.due_date)<today();
+function taskCard(t){const p=state.projects.find(x=>x.id===t.project_id);const over=taskOverdue(t);
   return `<div class="kcard" draggable="true" data-id="${t.id}" data-kind="task" onclick="openItem('task','${t.id}')">
     <div class="kt"><i class="bi bi-grip-vertical grip"></i><span style="flex:1">${esc(t.title)}</span></div>
-    <div class="kmeta">${p?`<span class="chip chip-gray">${esc(p.name)}</span>`:''}${t.assignee?`<span>👤 ${esc(t.assignee)}</span>`:''}${t.due_date?`<span style="${over?'color:var(--bad);font-weight:700':''}">📅 ${fmtD(t.due_date)}</span>`:''}</div>
+    <div class="kmeta">${t.priority&&t.priority!=='medium'?`<span class="chip tag-priority-${t.priority}">${PRIORITY_N[t.priority]}</span>`:''}${p?`<span class="chip chip-gray">${esc(p.name)}</span>`:''}${t.assignee?`<span>👤 ${esc(t.assignee)}</span>`:''}${t.points?`<span class="chip chip-blue">${t.points}P</span>`:''}${t.due_date?`<span style="${over?'color:var(--bad);font-weight:700':''}">📅 ${fmtD(t.due_date)}</span>`:''}</div>
     ${t.blocker?`<div class="blk">🚧 ${esc(t.blocker)}</div>`:''}</div>`;
 }
 
@@ -719,7 +842,7 @@ function bindDnD(){
       else if(dragKind==='task'&&b.dataset.tstatus)await moveTask(dragId,b.dataset.tstatus);dragId=null;dragKind=null;});});
 }
 async function moveProj(id,stage){const p=state.projects.find(x=>x.id===id);if(!p||p.stage===stage)return;const patch={stage,updated_at:new Date().toISOString()};if(stage==='launch')patch.progress=100;Object.assign(p,patch);render();await storeUpdate('pm_projects',id,patch);logEvent('project:'+id,'단계 → '+STAGE_N[stage]);}
-async function moveTask(id,status){const t=state.tasks.find(x=>x.id===id);if(!t||t.status===status)return;const old=t.status;t.status=status;render();await storeUpdate('pm_tasks',id,{status});logEvent('task:'+id,TASK_N[old]+' → '+TASK_N[status]);}
+async function moveTask(id,status){const t=state.tasks.find(x=>x.id===id);if(!t||t.status===status)return;const old=t.status;const patch={status};if(status==='done'&&old!=='done')patch.completed_at=new Date().toISOString();else if(status!=='done')patch.completed_at=null;Object.assign(t,patch);render();await storeUpdate('pm_tasks',id,patch);logEvent('task:'+id,TASK_N[old]+' → '+TASK_N[status]);}
 
 // ─── 범용 상세 드로어 ───
 let detailType=null,detailId=null,drawerTab='';
@@ -728,7 +851,7 @@ function openByEntity(e){const[t,id]=e.split(':');openItem(t,id);}
 function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawer-bg').style.display='none';detailType=null;detailId=null;}
 function setDrawerTab(t){drawerTab=t;renderDrawer();}
 function curObj(){const m={project:'projects',task:'tasks',idea:'ideas',okr:'okrs'}[detailType];return state[m].find(x=>x.id===detailId);}
-async function patchObj(patch,ev){const tbl={project:'pm_projects',task:'pm_tasks',idea:'pm_ideas',okr:'pm_okrs'}[detailType];const o=curObj();if(!o)return;Object.assign(o,patch);const r=await storeUpdate(tbl,detailId,patch);if(r)Object.assign(o,r);if(ev)logEvent(detailType+':'+detailId,ev);renderDrawer();render();}
+async function patchObj(patch,ev){const tbl={project:'pm_projects',task:'pm_tasks',idea:'pm_ideas',okr:'pm_okrs'}[detailType];const o=curObj();if(!o)return;if(detailType==='task'&&patch.status){if(patch.status==='done'&&o.status!=='done')patch.completed_at=new Date().toISOString();else if(patch.status!=='done')patch.completed_at=null;}Object.assign(o,patch);const r=await storeUpdate(tbl,detailId,patch);if(r)Object.assign(o,r);if(ev)logEvent(detailType+':'+detailId,ev);renderDrawer();render();}
 function renderDrawer(){
   const o=curObj();if(!o){closeDrawer();return;}
   if(detailType==='project')renderProjectDrawer(o);
@@ -893,11 +1016,14 @@ function openTaskModal(id,status,projId){const t=id?state.tasks.find(x=>x.id===i
   openModal(`<div class="modal-head"><h3>${id?'업무 수정':'새 업무'}</h3><button class="x" onclick="closeModal()">×</button></div>
     <div class="modal-body">${field('업무 내용','<input id="t-title" value="'+esc(t.title||'')+'">')}${field('프로젝트','<select id="t-proj">'+popts+'</select>')}
       <div class="fld-row">${field('상태','<select id="t-status">'+TASK_COLS.map(c=>`<option value="${c.k}" ${t.status===c.k?'selected':''}>${c.n}</option>`).join('')+'</select>')}${field('담당자','<input id="t-assignee" value="'+esc(t.assignee||'')+'">')}</div>
+      <div class="fld-row">${field('우선순위','<select id="t-pri">'+opt([['high','높음'],['medium','보통'],['low','낮음']],t.priority||'medium')+'</select>')}${field('포인트(공수)','<input id="t-points" type="number" min="0" value="'+(t.points||'')+'" placeholder="예상 공수">')}</div>
       ${field('마감일','<input id="t-due" type="date" value="'+fmtD(t.due_date)+'">')}${field('블로커 (있으면)','<input id="t-blk" value="'+esc(t.blocker||'')+'" placeholder="진행을 막는 이슈">')}</div>
     <div class="modal-foot"><div>${id?`<button class="btn" style="color:var(--bad)" onclick="delTask('${id}')">삭제</button>`:''}</div><div><button class="btn" onclick="closeModal()">취소</button><button class="btn btn-primary" onclick="saveTask('${id||''}')">저장</button></div></div>`);
 }
-async function saveTask(id){const g=x=>document.getElementById(x);const row={title:g('t-title').value.trim(),project_id:g('t-proj').value||null,status:g('t-status').value,assignee:g('t-assignee').value.trim(),due_date:g('t-due').value||null,blocker:g('t-blk').value.trim()||null};
+async function saveTask(id){const g=x=>document.getElementById(x);const prev=id?state.tasks.find(x=>x.id===id):null;
+  const row={title:g('t-title').value.trim(),project_id:g('t-proj').value||null,status:g('t-status').value,assignee:g('t-assignee').value.trim(),due_date:g('t-due').value||null,blocker:g('t-blk').value.trim()||null,priority:g('t-pri')?g('t-pri').value:'medium',points:Number(g('t-points')&&g('t-points').value)||0};
   if(!row.title){toast('업무 내용을 입력하세요');return;}
+  if(row.status==='done'){if(!prev||prev.status!=='done')row.completed_at=new Date().toISOString();}else{row.completed_at=null;}
   if(id){const r=await storeUpdate('pm_tasks',id,row);Object.assign(state.tasks.find(x=>x.id===id),r||row);}
   else{const r=await storeInsert('pm_tasks',row);state.tasks.push(r);if(row.project_id)logEvent('project:'+row.project_id,'업무 추가: '+row.title);}
   closeModal();render();if(detailId)renderDrawer();toast('저장됨');
@@ -971,7 +1097,7 @@ document.getElementById('login-btn').addEventListener('click',doLogin);
 document.getElementById('login-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('logout-btn').addEventListener('click',doLogout);
 document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>setView(a.dataset.v)));
-Object.assign(window,{render,setView,setRmTab,setPipe,pipeJump,dashHealth,setTaskFilter,setIdeaTab,toggleSwitch,goSite,openItem,openByEntity,closeDrawer,setDrawerTab,patchObj,renderDrawer,postComment,toggleGate,addMs,toggleMs,delMs,addRisk,toggleRisk,delRisk,addLink,delLink,checkinKr,openProjModal,saveProj,delProj,openTaskModal,saveTask,delTask,openIdeaModal,saveIdea,delIdea,voteIdea,promoteIdea,calcRice,openOkrModal,saveOkr,delOkr,addKr,closeModal,openChangePwModal,doChangePw,forgotPw});
+Object.assign(window,{render,setView,setRmTab,setPipe,pipeJump,dashHealth,setTaskFilter,setTaskAssignee,setIdeaTab,toggleSwitch,goSite,openItem,openByEntity,closeDrawer,setDrawerTab,patchObj,renderDrawer,postComment,toggleGate,addMs,toggleMs,delMs,addRisk,toggleRisk,delRisk,addLink,delLink,checkinKr,openProjModal,saveProj,delProj,openTaskModal,saveTask,delTask,openIdeaModal,saveIdea,delIdea,voteIdea,promoteIdea,calcRice,openOkrModal,saveOkr,delOkr,addKr,closeModal,openChangePwModal,doChangePw,forgotPw});
 boot();
 </script>
 <script>function printPDF(){var t=document.title;var r=function(){document.title=t;window.removeEventListener('afterprint',r);};window.addEventListener('afterprint',r);window.print();}</script>
