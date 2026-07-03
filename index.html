@@ -397,7 +397,7 @@ async function enterApp(user){
   await loadAll();
   show('login','none');var _bo=document.getElementById('boot-ov');if(_bo)_bo.style.display='none';document.getElementById('app').style.display='block';
   var _nav=(performance.getEntriesByType('navigation')[0]||{}).type;
-  var _sv=sessionStorage.getItem('pmp_view'), _valid=['dashboard','roadmap','pipeline','tasks','ideas','okr'];
+  var _sv=sessionStorage.getItem('pmp_view'), _valid=['dashboard','roadmap','pipeline','tasks','ideas','okr','team','insights'];
   if(_nav==='reload' && _sv && _valid.indexOf(_sv)>=0) curView=_sv;   // 새로고침=머문 뷰, 신규=대시보드
   render();
 }
@@ -493,6 +493,8 @@ function seedDemo(){
 // ─── 유틸 ───
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
 function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function escJs(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function krPct(k){var t=Number(k.target),c=Number(k.current);if(t===0)return c<=0?100:0;return Math.min(100,Math.round(c/t*100));}
 function riceScore(i){const e=Number(i.effort)||1;return Math.round((Number(i.reach)*Number(i.impact)*(Number(i.confidence)/100))/e);}
 function today(){return new Date().toISOString().slice(0,10);}
 function fmtD(s){return s?String(s).slice(0,10):'';}
@@ -591,13 +593,13 @@ function viewTeam(){
   const maxOpen=Math.max(1,...ppl.map(x=>x.open));
   const kpis=[{v:ppl.length,l:'참여 인원'},{v:over.length,l:'과부하 인원',c:over.length?'var(--bad)':'var(--muted)'},{v:idle.length,l:'7일+ 저조',c:idle.length?'var(--warn)':'var(--muted)'},{v:unassigned.length,l:'미배정 업무',c:unassigned.length?'var(--warn)':'var(--muted)'}];
   const rows=ppl.map(x=>{const lv=loadLevel(x.open);const inactive=x.last&&ageDays(x.last)>=7;
-    return `<tr onclick="setTaskAssignee('${esc(x.name)}')">
+    return `<tr onclick="setTaskAssignee('${escJs(x.name)}')">
       <td class="l"><b style="color:var(--ink)">${esc(x.name)}</b> ${inactive?'<span class="chip chip-amber" style="margin-left:4px">저조</span>':(x.acts>=8?'<span class="chip chip-green" style="margin-left:4px">활발</span>':'')}</td>
       <td>${x.doing}/${x.open}</td><td style="${x.overdue?'color:var(--bad);font-weight:700':''}">${x.overdue||'-'}</td>
       <td style="color:var(--ok);font-weight:700">${x.doneWeek||'-'}</td>
       <td>${x.pmProjects||'-'}${x.pmRisk?` <span style="color:var(--bad)">(위험 ${x.pmRisk})</span>`:''}</td>
       <td style="width:160px"><div style="display:flex;align-items:center;gap:8px"><div class="miniprog" style="min-width:60px;flex:1"><i style="width:${x.open/maxOpen*100}%;background:${LOAD_C[lv]}"></i></div><span class="chip" style="background:${LOAD_C[lv]}22;color:${LOAD_C[lv]}">${LOAD_N[lv]}</span></div></td>
-      <td style="width:130px">${(()=>{const cap=getCap(x.name),u=cap?Math.round(x.points/cap*100):0;return `<div style="display:flex;align-items:center;gap:6px"><div class="miniprog" style="min-width:44px;flex:1"><i style="width:${Math.min(100,u)}%;background:${u>100?'#dc2626':u>=80?'#f59e0b':'#16a34a'}"></i></div><span class="muted" style="font-size:11px;white-space:nowrap;cursor:pointer" onclick="event.stopPropagation();editCap('${esc(x.name)}')" title="클릭해 용량 수정">${x.points}/${cap}${u>100?' ⚠':''}</span></div>`;})()}</td>
+      <td style="width:130px">${(()=>{const cap=getCap(x.name),u=cap?Math.round(x.points/cap*100):0;return `<div style="display:flex;align-items:center;gap:6px"><div class="miniprog" style="min-width:44px;flex:1"><i style="width:${Math.min(100,u)}%;background:${u>100?'#dc2626':u>=80?'#f59e0b':'#16a34a'}"></i></div><span class="muted" style="font-size:11px;white-space:nowrap;cursor:pointer" onclick="event.stopPropagation();editCap('${escJs(x.name)}')" title="클릭해 용량 수정">${x.points}/${cap}${u>100?' ⚠':''}</span></div>`;})()}</td>
       <td class="muted" style="font-size:12px">${x.last?timeAgo(x.last):'기록 없음'}</td></tr>`;}).join('')||'<tr><td colspan="8" class="empty">담당자 데이터 없음</td></tr>';
   const unlist=unassigned.length?unassigned.slice(0,10).map(t=>`<div onclick="openItem('task','${t.id}')" style="padding:8px 0;border-bottom:1px dashed var(--line);cursor:pointer;font-size:13px"><b style="color:var(--ink)">${esc(t.title)}</b>${taskOverdue(t)?' <span style="color:var(--bad)">· 지연</span>':''}</div>`).join(''):'<div class="empty" style="color:var(--ok)">미배정 업무 없음</div>';
   const idlelist=idle.length?idle.map(x=>`<div style="padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px;display:flex;justify-content:space-between"><b style="color:var(--ink)">${esc(x.name)}</b><span class="muted">최근 활동 ${timeAgo(x.last)} · 진행중 ${x.open}건</span></div>`).join(''):'<div class="empty" style="color:var(--ok)"><i class="bi bi-check-circle"></i> 최근 7일 내 전원 활동</div>';
@@ -667,12 +669,12 @@ function viewDashboard(){
     {v:okrAvg+'%',l:'OKR 평균 달성',ic:'🎯',go:"setView('okr')",tr:'<span style="color:var(--brand)">분기 목표</span>'},
   ];
   const segs=[{v:green.length,c:HEALTH.green.c},{v:amber.length,c:HEALTH.amber.c},{v:red.length,c:HEALTH.red.c}];
-  const dist=STAGES.map(s=>({...s,n:P.filter(p=>p.stage===s.k).length}));
-  const maxN=Math.max(1,...dist.map(d=>d.n));
+  const dist=STAGES.map(s=>({k:s.k,name:s.n,cnt:P.filter(p=>p.stage===s.k).length}));
+  const maxN=Math.max(1,...dist.map(d=>d.cnt));
   const funnel=dist.map(d=>`<div onclick="pipeJump('${d.k}')" style="display:flex;align-items:center;gap:12px;margin-bottom:9px;cursor:pointer">
-      <div style="width:128px;font-size:12.5px;color:var(--body)">${esc(d.n)}</div>
+      <div style="width:128px;font-size:12.5px;color:var(--body)">${esc(d.name)}</div>
       <div style="flex:1;height:24px;background:#f3f4f7;border-radius:8px;overflow:hidden">
-        <div style="width:${d.n/maxN*100}%;height:100%;background:var(--s-${d.k});border-radius:8px;min-width:${d.n?28:0}px;display:flex;align-items:center;justify-content:flex-end;color:#fff;font-size:11px;font-weight:700;padding-right:8px">${d.n||''}</div>
+        <div style="width:${d.cnt/maxN*100}%;height:100%;background:var(--s-${d.k});border-radius:8px;min-width:${d.cnt?28:0}px;display:flex;align-items:center;justify-content:flex-end;color:#fff;font-size:11px;font-weight:700;padding-right:8px">${d.cnt||''}</div>
       </div></div>`).join('');
   const gates=P.filter(p=>p.next_gate&&daysUntil(p.next_gate)!=null&&daysUntil(p.next_gate)>=-3).sort((a,b)=>fmtD(a.next_gate)<fmtD(b.next_gate)?-1:1).slice(0,6);
   const gateHtml=gates.length?gates.map(p=>{const d=daysUntil(p.next_gate);return `<div onclick="openItem('project','${p.id}')" style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px dashed var(--line);cursor:pointer">
@@ -728,10 +730,10 @@ function viewDashboard(){
     <div class="card"><div class="sect-title"><span>🕑 최근 활동</span></div>${actHtml}</div>
   </div></div>`;
 }
-function okrAverage(){let v=[];state.okrs.forEach(o=>(o.krs||[]).forEach(k=>v.push(Math.min(100,(Number(k.current)/Number(k.target||1))*100))));return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):0;}
+function okrAverage(){let v=[];state.okrs.forEach(o=>(o.krs||[]).forEach(k=>v.push(krPct(k))));return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):0;}
 function donut(segs,total){const t=segs.reduce((s,x)=>s+x.v,0)||1;let acc=0;const stops=segs.map(s=>{const a=acc/t*360,b=(acc+s.v)/t*360;acc+=s.v;return `${s.c} ${a}deg ${b}deg`;}).join(',');
   return `<div style="width:126px;height:126px;border-radius:50%;background:conic-gradient(${stops||'#e8ebf0 0deg 360deg'});position:relative;flex-shrink:0"><div style="position:absolute;inset:21px;background:#fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset 0 1px 4px rgba(0,0,0,.05)"><div style="font-size:26px;font-weight:800;color:var(--ink)">${total}</div><div style="font-size:10px;color:var(--muted)">프로젝트</div></div></div>`;}
-function pipeJump(stage){pipePM='';pipeCat='';pipeQ='';curView='pipeline';render();window.scrollTo(0,0);}
+function pipeJump(stage){pipePM='';pipeCat='';pipeQ='';pipeHealth='';curView='pipeline';render();window.scrollTo(0,0);}
 function dashHealth(h){pipeHealth=h;curView='pipeline';render();window.scrollTo(0,0);}
 
 // ─── 로드맵 ───
@@ -804,7 +806,7 @@ function viewPipeline(){
       <select onchange="setPipe('pm',this.value)"><option value="">PM 전체</option>${pms.map(x=>`<option ${pipePM===x?'selected':''}>${esc(x)}</option>`).join('')}</select>
       <select onchange="setPipe('cat',this.value)"><option value="">카테고리 전체</option>${cats.map(x=>`<option ${pipeCat===x?'selected':''}>${esc(x)}</option>`).join('')}</select>
       <select onchange="setPipe('health',this.value)"><option value="">헬스 전체</option>${['green','amber','red'].map(h=>`<option value="${h}" ${pipeHealth===h?'selected':''}>${HEALTH[h].n}</option>`).join('')}</select>
-      <input placeholder="🔍 검색" value="${esc(pipeQ)}" oninput="pipeQ=this.value" onkeydown="if(event.key==='Enter')render()">
+      <input placeholder="🔍 검색 (엔터)" value="${esc(pipeQ)}" oninput="pipeQ=this.value" onkeydown="if(event.key==='Enter')render()">
       ${active?`<button class="btn btn-sm" onclick="pipePM='';pipeCat='';pipeQ='';pipeHealth='';render()">초기화</button>`:''}
       <button class="btn btn-sm" onclick="saveCurView('pipe')">🔖 뷰 저장</button>${viewChips('pipe')}
       <span class="muted" style="margin-left:auto;font-size:12px">${P.length}개 표시</span></div>
@@ -873,8 +875,8 @@ function ideaMatrix(I){const maxImp=3,maxEff=Math.max(4,...I.map(i=>Number(i.eff
 // ─── OKR ───
 function viewOkr(){
   const O=[...state.okrs].sort((a,b)=>a.quarter<b.quarter?1:-1);
-  const cards=O.length?O.map(o=>{const krs=o.krs||[];const avg=krs.length?Math.round(krs.reduce((s,k)=>s+Math.min(100,(Number(k.current)/Number(k.target||1))*100),0)/krs.length):0;
-    const krHtml=krs.map(k=>{const pct=Math.min(100,Math.round((Number(k.current)/Number(k.target||1))*100));return `<div class="kr"><div class="name">${esc(k.name)} <span class="muted" style="font-size:12px">(${k.current}/${k.target}${k.unit||''})</span></div><div class="bar"><i style="width:${pct}%;background:${pct>=100?'var(--ok)':pct>=50?'var(--brand)':'var(--warn)'}"></i></div><div class="pct">${pct}%</div></div>`;}).join('')||'<div class="empty" style="padding:14px">Key Result 없음</div>';
+  const cards=O.length?O.map(o=>{const krs=o.krs||[];const avg=krs.length?Math.round(krs.reduce((s,k)=>s+krPct(k),0)/krs.length):0;
+    const krHtml=krs.map(k=>{const pct=krPct(k);return `<div class="kr"><div class="name">${esc(k.name)} <span class="muted" style="font-size:12px">(${k.current}/${k.target}${k.unit||''})</span></div><div class="bar"><i style="width:${pct}%;background:${pct>=100?'var(--ok)':pct>=50?'var(--brand)':'var(--warn)'}"></i></div><div class="pct">${pct}%</div></div>`;}).join('')||'<div class="empty" style="padding:14px">Key Result 없음</div>';
     return `<div class="card okr" onclick="openItem('okr','${o.id}')"><div class="obj"><span style="display:flex;align-items:center;gap:8px"><span class="chip chip-violet">${esc(o.quarter)}</span>${esc(o.objective)}</span><b style="color:${avg>=70?'var(--ok)':'var(--brand)'};font-size:17px">${avg}%</b></div>${krHtml}</div>`;
   }).join(''):'<div class="card"><div class="empty">분기 목표(OKR)를 등록해 보세요 · 권장: 분기당 목표 3~5개, 목표당 KR 2~4개</div></div>';
   return page('🎯 OKR','분기 목표와 핵심결과 · 카드를 누르면 체크인·상세','<button class="btn btn-primary" onclick="openOkrModal()">+ OKR</button>')+cards+'</div>';
@@ -1037,8 +1039,8 @@ function renderTaskDrawer(t){const p=state.projects.find(x=>x.id===t.project_id)
   document.getElementById('drawer').innerHTML=drawerShell('업무',t.title,`<span class="chip chip-${TASK_CHIP[t.status]}">${TASK_N[t.status]}</span>${p?`<span class="muted" style="font-size:12px">${esc(p.name)}</span>`:''}${t.due_date?`<span class="muted" style="font-size:12px">📅 ${fmtD(t.due_date)}</span>`:''}`,null,body);
 }
 // OKR 드로어
-function renderOkrDrawer(o){const krs=o.krs||[];const avg=krs.length?Math.round(krs.reduce((s,k)=>s+Math.min(100,(Number(k.current)/Number(k.target||1))*100),0)/krs.length):0;
-  const krHtml=krs.map((k,idx)=>{const pct=Math.min(100,Math.round((Number(k.current)/Number(k.target||1))*100));
+function renderOkrDrawer(o){const krs=o.krs||[];const avg=krs.length?Math.round(krs.reduce((s,k)=>s+krPct(k),0)/krs.length):0;
+  const krHtml=krs.map((k,idx)=>{const pct=krPct(k);
     return `<div class="dwcard"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-weight:600;color:var(--ink);font-size:13.5px;flex:1">${esc(k.name)}</div><b style="color:${pct>=100?'var(--ok)':'var(--brand)'}">${pct}%</b></div>
       <div class="kr" style="border:0;padding:0"><div class="bar" style="width:100%"><i style="width:${pct}%;background:${pct>=100?'var(--ok)':pct>=50?'var(--brand)':'var(--warn)'}"></i></div></div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span class="muted" style="font-size:12px">진행 체크인:</span>
@@ -1052,7 +1054,7 @@ function renderOkrDrawer(o){const krs=o.krs||[];const avg=krs.length?Math.round(
 async function checkinKr(idx){const o=curObj();const v=Number(document.getElementById('kr-'+idx).value);const arr=o.krs.slice();arr[idx]={...arr[idx],current:v};await patchObj({krs:arr},`'${arr[idx].name}' 진행 ${v}${arr[idx].unit||''}`);}
 
 // ─── 모달 ───
-function openModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('modal-bg').style.display='flex';}
+function openModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('modal-bg').style.display='flex';setTimeout(()=>{var el=document.querySelector('#modal .modal-body input:not([type=date]):not([type=number]),#modal .modal-body textarea');if(el)el.focus();},50);}
 function closeModal(){document.getElementById('modal-bg').style.display='none';}
 document.getElementById('modal-bg').addEventListener('click',e=>{if(e.target.id==='modal-bg')closeModal();});
 function field(label,inner){return `<div class="fld"><label>${label}</label>${inner}</div>`;}
@@ -1075,7 +1077,7 @@ async function saveProj(id){const g=x=>document.getElementById(x);
   else{const r=await storeInsert('pm_projects',{...row,status:'active',checklist:buildChecklist(),milestones:[],risks:[],links:[]});state.projects.push(r);logEvent('project:'+r.id,'프로젝트 생성');}
   closeModal();render();if(detailId)renderDrawer();toast('저장됨');
 }
-async function delProj(id){if(!confirm('이 프로젝트를 삭제할까요? 연결된 업무도 함께 삭제됩니다.'))return;await storeDelete('pm_projects',id);state.projects=state.projects.filter(x=>x.id!==id);state.tasks=state.tasks.filter(t=>t.project_id!==id);closeModal();closeDrawer();render();toast('삭제됨');}
+async function delProj(id){if(!confirm('이 프로젝트를 삭제할까요? 연결된 업무도 함께 삭제됩니다.'))return;if(!DEMO){await _sb.from('pm_tasks').delete().eq('project_id',id);} else {lsSet('pm_tasks',lsGet('pm_tasks').filter(t=>t.project_id!==id));}await storeDelete('pm_projects',id);state.projects=state.projects.filter(x=>x.id!==id);state.tasks=state.tasks.filter(t=>t.project_id!==id);closeModal();closeDrawer();render();toast('삭제됨');}
 
 function openTaskModal(id,status,projId){const t=id?state.tasks.find(x=>x.id===id):{status:status||'todo',project_id:projId||taskFilter||''};
   const popts='<option value="">(프로젝트 미지정)</option>'+state.projects.map(p=>`<option value="${p.id}" ${t.project_id===p.id?'selected':''}>${esc(p.name)}</option>`).join('');
@@ -1094,7 +1096,7 @@ async function saveTask(id){const g=x=>document.getElementById(x);const prev=id?
   else{const r=await storeInsert('pm_tasks',row);state.tasks.push(r);if(row.project_id)logEvent('project:'+row.project_id,'업무 추가: '+row.title);}
   closeModal();render();if(detailId)renderDrawer();toast('저장됨');
 }
-async function delTask(id){await storeDelete('pm_tasks',id);state.tasks=state.tasks.filter(x=>x.id!==id);closeModal();if(detailType==='task')closeDrawer();else if(detailId)renderDrawer();render();toast('삭제됨');}
+async function delTask(id){if(!confirm('삭제할까요?'))return;await storeDelete('pm_tasks',id);state.tasks=state.tasks.filter(x=>x.id!==id);closeModal();if(detailType==='task')closeDrawer();else if(detailId)renderDrawer();render();toast('삭제됨');}
 
 function openIdeaModal(id){const i=id?state.ideas.find(x=>x.id===id):{reach:100,impact:1,confidence:80,effort:1,votes:0,status:'new',author:nm(ME)};
   openModal(`<div class="modal-head"><h3>${id?'아이디어 수정':'새 아이디어'}</h3><button class="x" onclick="closeModal()">×</button></div>
@@ -1113,7 +1115,7 @@ async function saveIdea(id){const g=x=>document.getElementById(x);const row={tit
   else{const r=await storeInsert('pm_ideas',{...row,votes:0,status:'new',author:nm(ME)});state.ideas.push(r);logEvent('idea:'+r.id,'아이디어 등록');}
   closeModal();render();if(detailId)renderDrawer();toast('저장됨');
 }
-async function delIdea(id){await storeDelete('pm_ideas',id);state.ideas=state.ideas.filter(x=>x.id!==id);closeModal();if(detailType==='idea')closeDrawer();render();toast('삭제됨');}
+async function delIdea(id){if(!confirm('삭제할까요?'))return;await storeDelete('pm_ideas',id);state.ideas=state.ideas.filter(x=>x.id!==id);closeModal();if(detailType==='idea')closeDrawer();render();toast('삭제됨');}
 async function voteIdea(id){const i=state.ideas.find(x=>x.id===id);i.votes=(i.votes||0)+1;render();await storeUpdate('pm_ideas',id,{votes:i.votes});}
 async function promoteIdea(id){const i=state.ideas.find(x=>x.id===id);if(!confirm(`'${i.title}'을(를) 새 프로젝트로 승격할까요?`))return;const p=await storeInsert('pm_projects',{name:i.title,description:i.description,summary:i.description,category:'기타',stage:'opportunity',pm:i.author||nm(ME),priority:'medium',health:'green',progress:0,status:'active',checklist:buildChecklist(),milestones:[],risks:[],links:[]});state.projects.push(p);const r=await storeUpdate('pm_ideas',id,{status:'accepted'});Object.assign(i,r||{status:'accepted'});logEvent('project:'+p.id,'아이디어에서 승격 생성');logEvent('idea:'+id,'프로젝트로 승격');render();closeDrawer();toast('프로젝트로 승격됨 🚀');openItem('project',p.id);}
 
@@ -1128,7 +1130,7 @@ function krRow(k){return `<div class="kr-row" style="display:grid;grid-template-
 function addKr(){const d=document.createElement('div');d.innerHTML=krRow({name:'',current:0,target:100,unit:''});document.getElementById('o-krs').appendChild(d.firstElementChild);}
 function collectKrs(){return Array.from(document.querySelectorAll('#o-krs .kr-row')).map(r=>({name:r.querySelector('.kr-name').value.trim(),current:Number(r.querySelector('.kr-cur').value)||0,target:Number(r.querySelector('.kr-tgt').value)||1,unit:r.querySelector('.kr-unit').value.trim()})).filter(k=>k.name);}
 async function saveOkr(id){const row={quarter:document.getElementById('o-q').value.trim()||curQuarter(),objective:document.getElementById('o-obj').value.trim(),krs:collectKrs()};if(!row.objective){toast('목표를 입력하세요');return;}if(id){const r=await storeUpdate('pm_okrs',id,row);Object.assign(state.okrs.find(x=>x.id===id),r||row);}else{const r=await storeInsert('pm_okrs',row);state.okrs.push(r);}closeModal();render();if(detailId)renderDrawer();toast('저장됨');}
-async function delOkr(id){await storeDelete('pm_okrs',id);state.okrs=state.okrs.filter(x=>x.id!==id);closeModal();if(detailType==='okr')closeDrawer();render();toast('삭제됨');}
+async function delOkr(id){if(!confirm('삭제할까요?'))return;await storeDelete('pm_okrs',id);state.okrs=state.okrs.filter(x=>x.id!==id);closeModal();if(detailType==='okr')closeDrawer();render();toast('삭제됨');}
 
 // ─── 비밀번호 변경 / 재설정 ───
 function openChangePwModal(){
@@ -1161,10 +1163,13 @@ document.addEventListener('click',e=>{const w=document.querySelector('.switch-wr
 // ─── 시작 ───
 document.getElementById('login-btn').addEventListener('click',doLogin);
 document.getElementById('login-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('login-id').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(typeof closeModal==='function')closeModal();if(typeof closeDrawer==='function')closeDrawer();}});
 document.getElementById('logout-btn').addEventListener('click',doLogout);
 document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>setView(a.dataset.v)));
 Object.assign(window,{resetDemo,render,setView,setRmTab,setPipe,pipeJump,dashHealth,setTaskFilter,setTaskAssignee,addDep,removeDep,editCap,saveCurView,applyView,delView,taskPatch,setIdeaTab,toggleSwitch,goSite,openItem,openByEntity,closeDrawer,setDrawerTab,patchObj,renderDrawer,postComment,toggleGate,addMs,toggleMs,delMs,addRisk,toggleRisk,delRisk,addLink,delLink,checkinKr,openProjModal,saveProj,delProj,openTaskModal,saveTask,delTask,openIdeaModal,saveIdea,delIdea,voteIdea,promoteIdea,calcRice,openOkrModal,saveOkr,delOkr,addKr,closeModal,openChangePwModal,doChangePw,forgotPw});
 boot();
+setTimeout(()=>{try{var lg=document.getElementById('login');if(lg&&lg.style.display!=='none'){var li=document.getElementById('login-id');if(li)li.focus();}}catch(e){}},400);
 </script>
 <script>function printPDF(){var t=document.title;var r=function(){document.title=t;window.removeEventListener('afterprint',r);};window.addEventListener('afterprint',r);window.print();}</script>
 <button id="pdf-fab" onclick="printPDF()" title="이 페이지를 PDF로 추출">📄 PDF</button>
