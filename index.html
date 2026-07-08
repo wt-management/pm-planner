@@ -521,7 +521,7 @@ function seedDemo(){
 // ─── 유틸 ───
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
 function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function escJs(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function escJs(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
 function krPct(k){var t=Number(k.target),c=Number(k.current);if(t===0)return c<=0?100:0;return Math.min(100,Math.round(c/t*100));}
 function riceScore(i){const e=Number(i.effort)||1;return Math.round((Number(i.reach)*Number(i.impact)*(Number(i.confidence)/100))/e);}
 function today(){return new Date().toISOString().slice(0,10);}
